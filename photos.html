@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<title>Photos — Durham Softball</title>
+<meta name="description" content="Game day photos from sixteen seasons of Durham Softball at Pineywood Park.">
+</head>
+<body>
+<div data-header="photos.html"></div>
+<div class="page-head">
+  <img class="page-head-bg" src="https://durhamsoftball.com/wp-content/uploads/2025/03/2025-Spring-Softball-Champs-1024x723.jpg" alt="">
+  <div class="wrap">
+    <div class="crumb">The album</div>
+    <h1 class="h-lg">Photos</h1>
+    <p>Sixteen seasons of Sunday softball, champions, and the causes the league plays for.</p>
+  </div>
+</div>
+<main class="section">
+  <div class="wrap">
+    <div class="notice"><span></span><div>
+      <strong>These are the photos already on the league site.</strong> The gallery is built to take a
+      whole season's worth &mdash; drop new game-day shots in and they flow into this grid automatically.
+    </div></div>
+    <div class="photo-grid-lg" id="gallery"></div>
+    <div class="center" style="margin-top:42px">
+      <p class="muted" style="margin-bottom:16px">More photos go up on Facebook after most game days.</p>
+      <a class="btn btn-outline" href="https://www.facebook.com/durhamsoftball" target="_blank" rel="noopener">Facebook album</a>
+    </div>
+  </div>
+</main>
+<div data-footer></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+document.querySelector('.notice span').innerHTML = DSUI.ICONS.info;
+document.getElementById('gallery').innerHTML = DSUI.photoBand(DS.PHOTOS,{allowWide:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+/* ==========================================================================
+   Durham Softball — League data
+   All 80 games of the 2026 Summer season are REAL, transcribed from the
+   official 2026 Summer Calendar (which lists "Home vs. Away").
+   Validated: 8 game days x 10 games, no team/time collisions,
+   every team 4 home / 4 away, no cross-league matchups.
+   ========================================================================== */
+(function (global) {
+  'use strict';
+
+  var CDN = 'https://durhamsoftball.com/wp-content/uploads/';
+
+  /* ---------- Teams ---------- */
+  var TEAMS = [
+    { id:'alp416', name:'American Legion Post 416',        short:'Am. Legion 416',   league:'A', logo:CDN+'2026/02/TeamSquare_AmericanLegionPost416-128x128.jpg', url:'https://durhamsoftball.com/teams/american-legion-post-416/', site:'https://al416nc.wixsite.com/al416nc', cause:'Veteran services & military families',
+      blurb:'As the only veterans’ service organization located in Research Triangle Park, American Legion Post 416 relentlessly champions veterans and military members, supports military families, and works hard to meet the unique needs of our community in the South Durham County / Northwest Wake County, North Carolina area.' },
+    { id:'bike',   name:'Bike Durham',                     short:'Bike Durham',      league:'A', logo:CDN+'2026/08/TeamSquare_BikeDurham-128x128.jpg',            url:'https://durhamsoftball.com/teams/bike-durham/', cause:'Safe streets & transit advocacy' },
+    { id:'book',   name:'BookHarvest',                     short:'BookHarvest',      league:'A', logo:CDN+'2025/03/BookHarvest-128x128.jpg',                      url:'https://durhamsoftball.com/teams/bookharvest/', cause:'Books & literacy for every child' },
+    { id:'bcll',   name:'Bull City Little League',         short:'Bull City LL',     league:'A', logo:CDN+'2026/08/TeamSquare_BCLL-128x128.jpg',                  url:'https://durhamsoftball.com/teams/bull-city-little-league/', cause:'Youth baseball in Durham' },
+    { id:'gotr',   name:'Girls on the Run of the Triangle',short:'Girls on the Run', league:'A', logo:CDN+'2023/12/TeamSquare_GOTR-128x128.jpg',                  url:'https://durhamsoftball.com/teams/girls-on-the-run-of-the-triangle/', cause:'Confidence & health for girls' },
+    { id:'hfnh',   name:'Housing for New Hope',            short:'Housing New Hope', league:'A', logo:CDN+'2023/12/TeamSquare_HousingForNewHope-128x128.jpg',     url:'https://durhamsoftball.com/teams/housing-for-new-hope/', cause:'Ending homelessness in Durham' },
+    { id:'kdb',    name:'Keep Durham Beautiful',           short:'Keep Durham Btfl', league:'A', logo:CDN+'2025/03/KeepDurhamBeautiful-128x128.jpg',              url:'https://durhamsoftball.com/teams/keep-durham-beautiful/', cause:'Litter cleanup & greening' },
+    { id:'mow',    name:'Meals on Wheels of Durham',       short:'Meals on Wheels',  league:'A', logo:CDN+'2023/12/TeamSquare_MealsOnWheelsOfDurham2022-128x128.jpg', url:'https://durhamsoftball.com/teams/meals-on-wheels-of-durham/', cause:'Meals for homebound neighbors' },
+    { id:'ncfff',  name:'NC Fallen Firefighters Foundation',short:'NC Fallen FF',    league:'A', logo:CDN+'2023/12/TeamSquare_NCFFF-128x128.jpg',                 url:'https://durhamsoftball.com/teams/north-carolina-fallen-firefighters-foundation/', cause:'Support for firefighter families' },
+    { id:'sdll',   name:'South Durham Little League',      short:'South Durham LL',  league:'A', logo:CDN+'2023/12/TeamSquare_SouthDurhamLittleLeague-128x128.jpg', url:'https://durhamsoftball.com/teams/south-durham-little-league/', site:'https://tshq.bluesombrero.com/sdllnc', cause:'Youth baseball, ages 4-16' },
+
+    { id:'aps',    name:'Animal Protection Society of Durham', short:'APS of Durham', league:'B', logo:CDN+'2023/12/TeamSquare_APSofDurham-128x128.jpg',          url:'https://durhamsoftball.com/teams/animal-protection-society-of-durham/', site:'https://www.apsofdurham.org/', cause:'Shelter & care for ~4,000 animals a year' },
+    { id:'bcw',    name:'Bull City Woodshop',              short:'BC Woodshop',      league:'B', logo:CDN+'2026/02/Square_BullCityWoodshop-128x128.jpg',          url:'https://durhamsoftball.com/teams/bull-city-woodshop/', cause:'Woodworking education & access' },
+    { id:'hope',   name:'Hope Animal Rescue',              short:'Hope Animal',      league:'B', logo:CDN+'2026/08/TeamSquare_HopeAnimalRescue-128x128.jpg',      url:'https://durhamsoftball.com/teams/hope-animal-rescue/', cause:'Rescue & rehoming' },
+    { id:'josh',   name:'Josh’s Hope',                short:'Josh’s Hope', league:'B', logo:CDN+'2023/12/TeamSquare_JoshsHope-128x128.jpg',             url:'https://durhamsoftball.com/teams/joshs-hope/', cause:'Young adult mental health' },
+    { id:'mlt',    name:'Miracle League of the Triangle',  short:'Miracle League',   league:'B', logo:CDN+'2023/12/TeamSquare_MiracleLeagueOfTheTriangle-128x128.jpg', url:'https://durhamsoftball.com/teams/miracle-league-of-the-triangle/', site:'https://www.mltriangle.com/', cause:'Baseball for children with special needs' },
+    { id:'nccadv', name:'NC Coalition Against Domestic Violence', short:'NCCADV',    league:'B', logo:CDN+'2023/12/TeamSquare_NCCADV2023-Copy-128x128.jpg',       url:'https://durhamsoftball.com/teams/north-carolina-coalition-against-domestic-violence/', cause:'Survivor advocacy statewide' },
+    { id:'porch',  name:'PORCH-Durham',                    short:'PORCH-Durham',     league:'B', logo:CDN+'2023/12/TeamSquare_PORCH2026-128x128.jpg',             url:'https://durhamsoftball.com/teams/porch-durham/', cause:'Hunger relief food drives' },
+    { id:'spa',    name:'Senior PharmAssist',              short:'Senior PharmAsst', league:'B', logo:CDN+'2024/02/2024-Square-Senior-PharmAssist-1-128x128.jpg', url:'https://durhamsoftball.com/teams/senior-pharmassist/', cause:'Medication help for seniors' },
+    { id:'umd',    name:'Urban Ministries of Durham',      short:'Urban Ministries', league:'B', logo:CDN+'2024/01/TeamSquare_UMD-128x128.jpg',                   url:'https://durhamsoftball.com/teams/urban-ministries-of-durham/', cause:'Food, shelter & clothing' },
+    { id:'v2v',    name:'Vets To Vets United',             short:'Vets to Vets',     league:'B', logo:CDN+'2023/12/TeamSquare_VetsToVetsUnited-128x128.jpg',      url:'https://durhamsoftball.com/teams/vets-to-vets-united/', cause:'Veteran peer support' }
+  ];
+
+  var byId = {};
+  TEAMS.forEach(function (t) { byId[t.id] = t; });
+
+  /* ---------- Photos (from the league's own library) ---------- */
+  var PHOTOS = [
+    { src:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg', caption:'2025 Spring champions', wide:true },
+    { src:CDN+'2024/01/Summer_08-04-768x857.jpg',                 caption:'Summer game day' },
+    { src:CDN+'2023/12/End-of-Season-scaled-e1704691499317-754x1024.jpg', caption:'End of season' },
+    { src:CDN+'2024/01/Summer_09-08-e1704335799316.jpg',          caption:'Out at the park' },
+    { src:CDN+'2024/01/PlayNCSponsored_SDLL_01.jpg',              caption:'South Durham Little League, sponsored by the league' },
+    { src:CDN+'2024/01/PlayNCSponsored_MIRA_01-1024x1024.jpg',    caption:'Miracle League of the Triangle' },
+    { src:CDN+'2024/01/PlayNCSponsored_APS_01-e1704689633414.jpg',caption:'The APS of Durham kennel we sponsor' }
+  ];
+  var HERO_PHOTO = CDN + '2025/03/2025-Spring-Softball-Champs-1024x723.jpg';
+
+  /* ---------- Season config ---------- */
+  var SEASON = {
+    label: '2026 Summer',
+    number: 16,
+    opener: '2026-08-16',
+    venue: 'Pineywood Park',
+    venueAddress: '400 E Woodcroft Pkwy, Durham, NC 27713',
+    xHandle: 'PlayDurham'
+  };
+
+  var GAMES = [
+    { id:6462, d:'2026-08-16', t:'09:10', h:'ncfff', a:'alp416' },
+    { id:6461, d:'2026-08-16', t:'10:05', h:'porch', a:'hope' },
+    { id:6457, d:'2026-08-16', t:'11:00', h:'josh', a:'umd' },
+    { id:6458, d:'2026-08-16', t:'11:55', h:'aps', a:'spa' },
+    { id:6459, d:'2026-08-16', t:'12:50', h:'bcw', a:'v2v' },
+    { id:6460, d:'2026-08-16', t:'13:45', h:'book', a:'kdb' },
+    { id:6456, d:'2026-08-16', t:'14:40', h:'hfnh', a:'mow' },
+    { id:6455, d:'2026-08-16', t:'15:35', h:'mlt', a:'nccadv' },
+    { id:6463, d:'2026-08-16', t:'16:30', h:'bcll', a:'sdll' },
+    { id:6464, d:'2026-08-16', t:'17:25', h:'bike', a:'gotr' },
+    { id:6413, d:'2026-08-23', t:'09:10', h:'spa', a:'josh' },
+    { id:6414, d:'2026-08-23', t:'10:05', h:'kdb', a:'alp416' },
+    { id:6415, d:'2026-08-23', t:'11:00', h:'porch', a:'nccadv' },
+    { id:6416, d:'2026-08-23', t:'11:55', h:'mow', a:'bcll' },
+    { id:6417, d:'2026-08-23', t:'12:50', h:'mlt', a:'v2v' },
+    { id:6418, d:'2026-08-23', t:'13:45', h:'hfnh', a:'book' },
+    { id:6419, d:'2026-08-23', t:'14:40', h:'bcw', a:'umd' },
+    { id:6420, d:'2026-08-23', t:'15:35', h:'aps', a:'hope' },
+    { id:6421, d:'2026-08-23', t:'16:30', h:'ncfff', a:'bike' },
+    { id:6422, d:'2026-08-23', t:'17:25', h:'sdll', a:'gotr' },
+    { id:6465, d:'2026-08-30', t:'09:10', h:'gotr', a:'mow' },
+    { id:6466, d:'2026-08-30', t:'10:05', h:'alp416', a:'hfnh' },
+    { id:6467, d:'2026-08-30', t:'11:00', h:'hope', a:'spa' },
+    { id:6468, d:'2026-08-30', t:'11:55', h:'kdb', a:'ncfff' },
+    { id:6469, d:'2026-08-30', t:'12:50', h:'bcll', a:'book' },
+    { id:6470, d:'2026-08-30', t:'13:45', h:'bike', a:'sdll' },
+    { id:6471, d:'2026-08-30', t:'14:40', h:'v2v', a:'porch' },
+    { id:6473, d:'2026-08-30', t:'15:35', h:'josh', a:'bcw' },
+    { id:6474, d:'2026-08-30', t:'16:30', h:'umd', a:'mlt' },
+    { id:6475, d:'2026-08-30', t:'17:25', h:'nccadv', a:'aps' },
+    { id:6423, d:'2026-09-06', t:'09:10', h:'mow', a:'alp416' },
+    { id:6424, d:'2026-09-06', t:'10:05', h:'nccadv', a:'josh' },
+    { id:6425, d:'2026-09-06', t:'11:00', h:'sdll', a:'kdb' },
+    { id:6426, d:'2026-09-06', t:'11:55', h:'book', a:'gotr' },
+    { id:6427, d:'2026-09-06', t:'12:50', h:'aps', a:'mlt' },
+    { id:6428, d:'2026-09-06', t:'13:45', h:'hfnh', a:'bike' },
+    { id:6429, d:'2026-09-06', t:'14:40', h:'umd', a:'porch' },
+    { id:6430, d:'2026-09-06', t:'15:35', h:'v2v', a:'spa' },
+    { id:6431, d:'2026-09-06', t:'16:30', h:'bcw', a:'hope' },
+    { id:6433, d:'2026-09-06', t:'17:25', h:'bcll', a:'ncfff' },
+    { id:6476, d:'2026-09-13', t:'09:10', h:'bcw', a:'aps' },
+    { id:6477, d:'2026-09-13', t:'10:05', h:'gotr', a:'bcll' },
+    { id:6478, d:'2026-09-13', t:'11:00', h:'spa', a:'nccadv' },
+    { id:6479, d:'2026-09-13', t:'11:55', h:'bike', a:'kdb' },
+    { id:6480, d:'2026-09-13', t:'12:50', h:'alp416', a:'sdll' },
+    { id:6481, d:'2026-09-13', t:'13:45', h:'v2v', a:'umd' },
+    { id:6482, d:'2026-09-13', t:'14:40', h:'mow', a:'book' },
+    { id:6483, d:'2026-09-13', t:'15:35', h:'porch', a:'mlt' },
+    { id:6484, d:'2026-09-13', t:'16:30', h:'hope', a:'josh' },
+    { id:6485, d:'2026-09-13', t:'17:25', h:'ncfff', a:'hfnh' },
+    { id:6434, d:'2026-09-20', t:'09:10', h:'ncfff', a:'book' },
+    { id:6435, d:'2026-09-20', t:'10:05', h:'hope', a:'v2v' },
+    { id:6436, d:'2026-09-20', t:'11:00', h:'spa', a:'porch' },
+    { id:6437, d:'2026-09-20', t:'11:55', h:'umd', a:'nccadv' },
+    { id:6438, d:'2026-09-20', t:'12:50', h:'bike', a:'alp416' },
+    { id:6439, d:'2026-09-20', t:'13:45', h:'mlt', a:'bcw' },
+    { id:6440, d:'2026-09-20', t:'14:40', h:'kdb', a:'bcll' },
+    { id:6441, d:'2026-09-20', t:'15:35', h:'sdll', a:'mow' },
+    { id:6442, d:'2026-09-20', t:'16:30', h:'gotr', a:'hfnh' },
+    { id:6443, d:'2026-09-20', t:'17:25', h:'aps', a:'josh' },
+    { id:6486, d:'2026-09-27', t:'09:10', h:'josh', a:'porch' },
+    { id:6487, d:'2026-09-27', t:'10:05', h:'gotr', a:'ncfff' },
+    { id:6488, d:'2026-09-27', t:'11:00', h:'hope', a:'mlt' },
+    { id:6489, d:'2026-09-27', t:'11:55', h:'v2v', a:'aps' },
+    { id:6490, d:'2026-09-27', t:'12:50', h:'nccadv', a:'bcw' },
+    { id:6491, d:'2026-09-27', t:'13:45', h:'alp416', a:'bcll' },
+    { id:6493, d:'2026-09-27', t:'14:40', h:'sdll', a:'hfnh' },
+    { id:6494, d:'2026-09-27', t:'15:35', h:'spa', a:'umd' },
+    { id:6495, d:'2026-09-27', t:'16:30', h:'book', a:'bike' },
+    { id:6496, d:'2026-09-27', t:'17:25', h:'kdb', a:'mow' },
+    { id:6444, d:'2026-10-04', t:'09:10', h:'hfnh', a:'kdb' },
+    { id:6445, d:'2026-10-04', t:'10:05', h:'nccadv', a:'hope' },
+    { id:6446, d:'2026-10-04', t:'11:00', h:'book', a:'sdll' },
+    { id:6447, d:'2026-10-04', t:'11:55', h:'mow', a:'ncfff' },
+    { id:6448, d:'2026-10-04', t:'12:50', h:'alp416', a:'gotr' },
+    { id:6449, d:'2026-10-04', t:'13:45', h:'josh', a:'v2v' },
+    { id:6450, d:'2026-10-04', t:'14:40', h:'bcll', a:'bike' },
+    { id:6451, d:'2026-10-04', t:'15:35', h:'mlt', a:'spa' },
+    { id:6453, d:'2026-10-04', t:'16:30', h:'porch', a:'bcw' },
+    { id:6454, d:'2026-10-04', t:'17:25', h:'umd', a:'aps' }
+  ];
+
+  /* ---------- Build schedule from the flat game list ---------- */
+  function fmtTime(t) {
+    var p = t.split(':'), h = parseInt(p[0], 10), m = p[1];
+    var ap = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    return h12 + ':' + m + ' ' + ap;
+  }
+
+  function buildSchedule() {
+    var byDate = {}, order = [];
+    GAMES.forEach(function (g) {
+      if (!byDate[g.d]) { byDate[g.d] = []; order.push(g.d); }
+      byDate[g.d].push({
+        id: 'g' + g.id,
+        gameId: g.id,
+        time: fmtTime(g.t),
+        time24: g.t,
+        date: g.d,
+        home: g.h,
+        away: g.a,
+        league: byId[g.h].league,
+        venue: SEASON.venue,
+        placeholder: false
+      });
+    });
+    order.sort();
+    return order.map(function (d, i) {
+      byDate[d].sort(function (a, b) { return a.time24 < b.time24 ? -1 : 1; });
+      return { week: i + 1, date: d, games: byDate[d] };
+    });
+  }
+
+  var SCHEDULE = buildSchedule();
+
+  function teamGames(teamId) {
+    var out = [];
+    SCHEDULE.forEach(function (day) {
+      day.games.forEach(function (g) {
+        if (g.home === teamId || g.away === teamId) {
+          out.push({ game: g, day: day, isHome: g.home === teamId,
+                     opponent: byId[g.home === teamId ? g.away : g.home] });
+        }
+      });
+    });
+    return out;
+  }
+
+  /* ---------- Results ----------
+     Season opens Aug 16, so live records are genuinely 0-0.
+     Sample mode fills deterministic scores for the first 4 weeks. */
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
+      return s / 4294967296;
+    };
+  }
+
+  function buildSampleResults() {
+    var r = rng(20260816), out = {};
+    SCHEDULE.slice(0, 4).forEach(function (day) {
+      day.games.forEach(function (g) {
+        var hs = 4 + Math.floor(r() * 16), as = 4 + Math.floor(r() * 16);
+        if (hs === as && r() > 0.35) hs += 1;
+        out[g.id] = { home: hs, away: as };
+      });
+    });
+    return out;
+  }
+
+  var SAMPLE_RESULTS = buildSampleResults();
+
+  function computeStandings(results) {
+    var rec = {};
+    TEAMS.forEach(function (t) { rec[t.id] = { w:0, l:0, t:0, rs:0, ra:0, form:[] }; });
+
+    SCHEDULE.forEach(function (day) {
+      day.games.forEach(function (g) {
+        var res = results && results[g.id];
+        if (!res) return;
+        var h = rec[g.home], a = rec[g.away];
+        h.rs += res.home; h.ra += res.away;
+        a.rs += res.away; a.ra += res.home;
+        if (res.home > res.away)      { h.w++; a.l++; h.form.push('w'); a.form.push('l'); }
+        else if (res.home < res.away) { a.w++; h.l++; a.form.push('w'); h.form.push('l'); }
+        else                          { h.t++; a.t++; h.form.push('t'); a.form.push('t'); }
+      });
+    });
+
+    return TEAMS.map(function (team) {
+      var s = rec[team.id], gp = s.w + s.l + s.t;
+      var pct = gp ? (s.w + s.t * 0.5) / gp : 0;
+      var streak = { type:'-', n:0 };
+      for (var i = s.form.length - 1; i >= 0; i--) {
+        if (i === s.form.length - 1) streak = { type:s.form[i], n:1 };
+        else if (s.form[i] === streak.type) streak.n++;
+        else break;
+      }
+      return { team:team, gp:gp, w:s.w, l:s.l, t:s.t, pct:pct,
+               rs:s.rs, ra:s.ra, diff:s.rs - s.ra, streak:streak, last5:s.form.slice(-5) };
+    });
+  }
+
+  var REVIEWS = [
+    { quote:'Wonderful opportunity to support our local charities, while having a blast playing softball. Fun for the whole family!!', name:'Terry Morris', role:'Executive Director, Vets to Vets United', img:CDN+'2024/01/Reviews_Terry.jpg' },
+    { quote:'Playing in this league, I have been able to meet people from throughout the Durham community and have fun playing a game I love, all while raising money for charities that give back directly to our community.', name:'Alex Turner', role:'Player, since 2018', img:CDN+'2024/01/Reviews_Alex.jpg' },
+    { quote:'I’ve had a ton of fun so far and have gotten to know friendly new people in the Durham area. The league is super chill, which makes it way more fun and easier to play.', name:'Jen Standish', role:'Player, since 2018', img:CDN+'2024/01/Reviews_Jen.jpg' }
+  ];
+
+  global.DS = {
+    CDN: CDN,
+    LOGO: CDN + '2023/12/cropped-Durham-Softball-Logo-By-Play-NC.jpg',
+    HERO_PHOTO: HERO_PHOTO,
+    PHOTOS: PHOTOS,
+    TEAMS: TEAMS,
+    byId: byId,
+    SEASON: SEASON,
+    SCHEDULE: SCHEDULE,
+    GAMES: GAMES,
+    teamGames: teamGames,
+    SAMPLE_RESULTS: SAMPLE_RESULTS,
+    computeStandings: computeStandings,
+    REVIEWS: REVIEWS
+  };
+})(window);

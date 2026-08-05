@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<title>Team — Durham Softball</title>
+</head>
+<body>
+<div data-header="teams.html"></div>
+<div id="team-page"></div>
+<div data-footer></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function(){
+  var id = DSUI.qs('id');
+  var team = DS.byId[id];
+  var host = document.getElementById('team-page');
+
+  if(!team){
+    host.innerHTML =
+      '<div class="page-head"><div class="wrap"><div class="crumb">Teams</div>'+
+      '<h1 class="h-lg">Team not found</h1>'+
+      '<p>Pick a team from the partners page.</p></div></div>'+
+      '<main class="section"><div class="wrap center">'+
+      '<a class="btn btn-primary" href="teams.html">All 20 teams</a></div></main>';
+    return;
+  }
+
+  document.title = team.name + ' — Durham Softball';
+
+  var games = DS.teamGames(team.id);
+  var st = DS.computeStandings(null).filter(function(r){return r.team.id===team.id;})[0];
+  var homeCount = games.filter(function(g){return g.isHome;}).length;
+
+  var sched = games.map(function(g){
+    var d = new Date(g.day.date+'T12:00:00');
+    return '<div class="tsched-row">'+
+      '<div class="tsched-date">'+d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+
+        '<small>'+d.toLocaleDateString('en-US',{weekday:'short'})+' &middot; Wk '+g.day.week+'</small></div>'+
+      '<div><span class="tag-ha '+(g.isHome?'tag-home':'tag-away')+'">'+
+        (g.isHome?DSUI.ICONS.plate+'Home':'Away')+'</span></div>'+
+      '<div class="tsched-opp">'+
+        '<img src="'+g.opponent.logo+'" alt="" loading="lazy">'+
+        '<div><a class="n" href="team.html?id='+g.opponent.id+'">'+
+        (g.isHome?'vs ':'at ')+DSUI.esc(g.opponent.name)+'</a></div></div>'+
+      '<div class="tsched-time">'+g.game.time+'</div>'+
+    '</div>';
+  }).join('');
+
+  host.innerHTML =
+    '<div class="page-head">'+
+      '<img class="page-head-bg" src="'+DS.HERO_PHOTO+'" alt="">'+
+      '<div class="wrap">'+
+        '<div class="crumb"><a href="teams.html">Teams</a> &middot; '+team.league+' League</div>'+
+        '<div class="team-hero">'+
+          '<img src="'+team.logo+'" alt="'+DSUI.esc(team.name)+'">'+
+          '<div>'+
+            '<h1 class="h-lg">'+DSUI.esc(team.name)+'</h1>'+
+            '<div class="team-rec">'+
+              '<div><b>'+st.w+'-'+st.l+(st.t?'-'+st.t:'')+'</b><span>Record</span></div>'+
+              '<div><b>'+games.length+'</b><span>Games</span></div>'+
+              '<div><b>'+homeCount+'</b><span>Home</span></div>'+
+              '<div><b>'+(games.length-homeCount)+'</b><span>Away</span></div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+
+    '<main class="section"><div class="wrap">'+
+      '<div style="display:grid;gap:34px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">'+
+
+        '<section>'+
+          '<div class="eyebrow">Full season</div>'+
+          '<h2 class="h-md" style="margin-bottom:18px">'+DS.SEASON.label+' schedule</h2>'+
+          '<div class="tsched">'+sched+'</div>'+
+          '<p class="muted" style="font-size:.85rem;margin-top:14px">'+
+            'All games at '+DS.SEASON.venue+'. "Home" means this team bats last.</p>'+
+        '</section>'+
+
+        '<section>'+
+          '<div class="eyebrow">The charity</div>'+
+          '<h2 class="h-md" style="margin-bottom:16px">Who they play for</h2>'+
+          '<div class="card card-pad">'+
+            '<p style="font-family:var(--display);font-size:1.15rem;text-transform:uppercase;color:var(--text);margin-bottom:12px">'+
+              DSUI.esc(team.cause)+'</p>'+
+            (team.blurb
+              ? '<p style="color:var(--text-soft)">'+DSUI.esc(team.blurb)+'</p>'
+              : '<p class="muted" style="font-size:.93rem">The full charity write-up lives on the current league site &mdash; '+
+                'it would be pulled in here automatically once this design is wired up to the real content.</p>')+
+            '<div class="btn-row" style="margin-top:20px">'+
+              (team.site?'<a class="btn btn-primary btn-sm" href="'+team.site+'" target="_blank" rel="noopener">Visit '+DSUI.esc(team.short)+'</a>':'')+
+              '<a class="btn btn-outline btn-sm" href="'+team.url+'" target="_blank" rel="noopener">Current team page</a>'+
+            '</div>'+
+          '</div>'+
+
+          '<div class="card card-pad" style="margin-top:18px">'+
+            '<h3 class="h-sm">Support this team</h3>'+
+            '<p class="muted" style="font-size:.93rem;margin-top:10px">'+
+              'Every win moves a bigger share of the season donation pool toward '+DSUI.esc(team.short)+'.</p>'+
+            '<div class="btn-row" style="margin-top:16px">'+
+              '<a class="btn btn-outline btn-sm" href="donations.html">How the pool works</a>'+
+              '<a class="btn btn-outline btn-sm" href="standings.html">'+team.league+' League standings</a>'+
+            '</div>'+
+          '</div>'+
+        '</section>'+
+
+      '</div>'+
+
+      '<div style="margin-top:44px" class="center">'+
+        '<a class="btn btn-outline" href="teams.html">&larr; All 20 teams</a></div>'+
+    '</div></main>';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<title>Standings — Durham Softball</title>
+<meta name="description" content="2026 Summer standings for the Durham Softball A and B Leagues.">
+</head>
+<body>
+<div data-header="standings.html"></div>
+<div class="page-head">
+  <img class="page-head-bg" src="https://durhamsoftball.com/wp-content/uploads/2025/03/2025-Spring-Softball-Champs-1024x723.jpg" alt="">
+  <div class="wrap">
+    <div class="crumb">2026 Summer season</div>
+    <h1 class="h-lg">Standings</h1>
+    <p>Wins drive the donation pool &mdash; the better a team finishes, the bigger the share their non-profit takes home.</p>
+  </div>
+</div>
+<main class="section">
+  <div class="wrap">
+    <div class="notice"><span></span><div>
+      <strong>The season hasn't started</strong> &mdash; opening day is August 16, so every team is genuinely 0-0.
+      Switch to <em>Sample results</em> to see what a populated table looks like.
+    </div></div>
+    <div class="toolbar">
+      <div class="seg" role="tablist" aria-label="Filter by league">
+        <button role="tab" aria-selected="true" data-league="both">Both leagues</button>
+        <button role="tab" aria-selected="false" data-league="A">A League</button>
+        <button role="tab" aria-selected="false" data-league="B">B League</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="seg" role="tablist" aria-label="Data mode">
+        <button role="tab" aria-selected="true" data-mode="live">Live (0-0)</button>
+        <button role="tab" aria-selected="false" data-mode="sample">Sample results</button>
+      </div>
+    </div>
+    <div id="standings-out" style="display:grid;gap:34px"></div>
+    <div class="card card-pad" style="margin-top:34px">
+      <h3 class="h-sm" style="margin-bottom:10px">How teams are ranked</h3>
+      <p class="muted" style="font-size:.93rem;margin:0">
+        Ordered by winning percentage (a tie counts as half a win). Ties break on run differential,
+        then runs scored, then head-to-head. Tap any column header to re-sort.
+      </p>
+    </div>
+  </div>
+</main>
+<div data-footer></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function(){
+  var state={league:'both',mode:'live',sortKey:'pct',sortDir:'desc'};
+  document.querySelector('.notice span').innerHTML = DSUI.ICONS.info;
+
+  function render(){
+    var results = state.mode==='sample' ? DS.SAMPLE_RESULTS : null;
+    var all = DS.computeStandings(results);
+    var leagues = state.league==='both' ? ['A','B'] : [state.league];
+
+    document.getElementById('standings-out').innerHTML = leagues.map(function(lg){
+      var rows=all.filter(function(r){return r.team.league===lg;});
+      return '<div data-host="'+lg+'">'+DSUI.standingsTable(rows,{
+        title: DS.SEASON.label+' — '+lg+' League', sortKey:state.sortKey, sortDir:state.sortDir
+      })+'</div>';
+    }).join('');
+
+    document.querySelectorAll('th[data-sort]').forEach(function(th){
+      th.addEventListener('click',function(){
+        var key=th.getAttribute('data-sort');
+        state.sortDir=(state.sortKey===key&&state.sortDir==='desc')?'asc':'desc';
+        state.sortKey=key; render();
+      });
+    });
+  }
+
+  document.querySelectorAll('[data-league],[data-mode]').forEach(function(b){
+    b.addEventListener('click',function(){
+      b.parentNode.querySelectorAll('button').forEach(function(o){o.setAttribute('aria-selected','false');});
+      b.setAttribute('aria-selected','true');
+      if(b.hasAttribute('data-league')) state.league=b.getAttribute('data-league');
+      else state.mode=b.getAttribute('data-mode');
+      render();
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>

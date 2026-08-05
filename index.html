@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<title>Durham Softball — Play Ball Y'all</title>
+<meta name="description" content="Durham Softball is a charity co-ed adult softball league in Durham, NC. 20 teams, 350+ players, every dollar to local non-profits.">
+</head>
+<body>
+<div data-header="index.html"></div>
+
+<section class="hero">
+  <img class="hero-bg" src="" alt="" id="hero-bg">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-status">
+          <span class="pill pill-clay">Season 16</span>
+          <span>Summer 2026 &mdash; first pitch Aug 16</span>
+        </div>
+        <h1 class="h-xl">Durham's charity<br>softball league.<em>Play ball y'all.</em></h1>
+        <p class="lede" style="margin-top:20px;max-width:500px;color:#D6DDE3">
+          Co-ed, adult, slow-pitch, and unapologetically laid-back. Twenty teams play for twenty local
+          non-profits &mdash; the more your team wins, the bigger the check your charity takes home.
+        </p>
+        <div class="btn-row" style="margin-top:28px">
+          <a class="btn btn-primary btn-lg" href="schedule.html">See the schedule</a>
+          <a class="btn btn-ghost btn-lg" href="about.html">How it works</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b>20</b><span>Teams</span></div>
+          <div class="hero-stat"><b>350+</b><span>Players</span></div>
+          <div class="hero-stat"><b>$70k+</b><span>Donated since 2018</span></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-head"><h3>Next game day</h3><span class="pill pill-gold" id="hero-date"></span></div>
+        <div class="hero-card-body" id="hero-games"></div>
+        <div style="padding:12px 12px 8px"><a class="btn btn-ghost btn-sm" href="schedule.html" style="width:100%">All 10 games &rarr;</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm section-white">
+  <div class="wrap">
+    <div style="display:grid;gap:28px;align-items:center;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))">
+      <div>
+        <div class="eyebrow">New this season</div>
+        <h2 class="h-md">Home and away, spelled out.</h2>
+        <p class="muted" style="margin-top:12px;max-width:440px">
+          Matchups now read the way the rest of sports reads them &mdash; <strong>away on top, home below</strong>,
+          each one tagged. The home team's row is highlighted, bats last, and takes the third-base dugout.
+        </p>
+      </div>
+      <div id="demo-card"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div style="display:grid;gap:34px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div>
+        <div class="eyebrow">Straight from the field</div>
+        <h2 class="h-md">Latest from @PlayDurham</h2>
+        <p class="muted" style="margin:12px 0 20px">
+          Rainouts, make-ups, and day-of announcements land here first.
+        </p>
+        <div id="x-feed"></div>
+      </div>
+      <div>
+        <div class="eyebrow">The photo album</div>
+        <h2 class="h-md">Game day, every week</h2>
+        <p class="muted" style="margin:12px 0 20px">
+          Sixteen seasons of Sunday softball in south Durham.
+        </p>
+        <div class="photo-band" id="home-photos"></div>
+        <div style="margin-top:16px"><a class="btn btn-outline btn-sm" href="photos.html">See all photos</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-white">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Where things stand</div>
+      <h2 class="h-md">2026 Summer standings</h2>
+      <p class="lede">Two leagues, ten teams each. Season opens August 16 &mdash; everybody starts even.</p>
+    </div>
+    <div class="grid grid-2" id="standings-preview"></div>
+    <div class="center" style="margin-top:26px"><a class="btn btn-outline" href="standings.html">Full standings &amp; stats</a></div>
+  </div>
+</section>
+
+<section class="section section-dark">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow">More than a game</div>
+      <h2 class="h-md">Every season funds real work in Durham.</h2>
+      <p class="lede">Play NC is a 501(c)(3). League fees become the donation pool, and the pool becomes kennels, meals, books, and baseball for kids.</p>
+    </div>
+    <div class="grid grid-3">
+      <div style="background:rgba(255,255,255,.06);border:1px solid var(--navy-line);border-radius:var(--r);padding:24px">
+        <h3 class="h-sm" style="color:var(--gold)">$70,000+</h3>
+        <p style="color:var(--on-dark-soft);margin-top:10px">Donated to Durham non-profits since 2018, plus thousands of needed items.</p>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid var(--navy-line);border-radius:var(--r);padding:24px">
+        <h3 class="h-sm" style="color:var(--gold)">Win = give</h3>
+        <p style="color:var(--on-dark-soft);margin-top:10px">Finish higher, earn a larger share of the pool for the charity on your jersey.</p>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid var(--navy-line);border-radius:var(--r);padding:24px">
+        <h3 class="h-sm" style="color:var(--gold)">Year-round</h3>
+        <p style="color:var(--on-dark-soft);margin-top:10px">Annual sponsorships for South Durham Little League, Miracle League, and an APS kennel.</p>
+      </div>
+    </div>
+    <div class="center" style="margin-top:30px"><a class="btn btn-primary" href="donations.html">See how funds are used</a></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow">2026 Summer</div>
+      <h2 class="h-md">Twenty non-profit partners</h2>
+      <p class="lede">Each team plays for a Durham organization. Click any team for their full schedule and charity.</p>
+    </div>
+    <div class="grid grid-4" id="team-grid"></div>
+    <div class="center" style="margin-top:30px"><a class="btn btn-outline" href="teams.html">Meet every partner</a></div>
+  </div>
+</section>
+
+<section class="section section-white">
+  <div class="wrap">
+    <div class="section-head center"><div class="eyebrow">From the field</div><h2 class="h-md">What players say</h2></div>
+    <div class="grid grid-3" id="reviews"></div>
+  </div>
+</section>
+
+<section class="section section-ink">
+  <div class="wrap wrap-narrow center">
+    <div class="eyebrow">Next season</div>
+    <h2 class="h-lg">Registration opens in January.</h2>
+    <p class="lede" style="margin-top:15px">
+      Spring season starts in March. Sign up solo or bring a group &mdash; we'll balance the teams. Just bring a glove.
+    </p>
+    <div class="btn-row" style="justify-content:center;margin-top:26px">
+      <a class="btn btn-primary btn-lg" href="mailto:playncinc@gmail.com?subject=Add%20me%20to%20the%20Durham%20Softball%20newsletter">Join the newsletter</a>
+      <a class="btn btn-ghost btn-lg" href="https://paypal.me/plaync" target="_blank" rel="noopener">Donate</a>
+    </div>
+  </div>
+</section>
+
+<div data-footer></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function(){
+  var day = DS.SCHEDULE[0];
+  document.getElementById('hero-bg').src = DS.HERO_PHOTO;
+  document.getElementById('hero-date').textContent = DSUI.fmtDate(day.date,{month:'short',day:'numeric'});
+  document.getElementById('hero-games').innerHTML =
+    day.games.slice(0,3).map(function(g){return DSUI.gameCard(g,{compact:true});}).join('');
+  document.getElementById('demo-card').innerHTML = DSUI.gameCard(day.games[0]);
+
+  DSUI.mountXFeed(document.getElementById('x-feed'));
+  document.getElementById('home-photos').innerHTML = DSUI.photoBand(DS.PHOTOS.slice(1,5));
+
+  document.getElementById('standings-preview').innerHTML = ['A','B'].map(function(lg){
+    var rows = DS.computeStandings(null).filter(function(r){return r.team.league===lg;})
+      .sort(function(a,b){return a.team.name.localeCompare(b.team.name);}).slice(0,5);
+    return '<div class="table-wrap"><div class="table-head"><h3>'+lg+' League</h3>'+
+      '<span class="spacer"></span><span class="pill pill-outline">10 teams</span></div>'+
+      rows.map(function(r,i){
+        return '<a class="sc-row" href="team.html?id='+r.team.id+'">'+
+          '<span class="pos-badge">'+(i+1)+'</span>'+
+          '<img class="sc-logo" src="'+r.team.logo+'" alt="" loading="lazy">'+
+          '<div class="sc-main"><div class="sc-name">'+DSUI.esc(r.team.name)+'</div>'+
+          '<div class="sc-sub"><span>'+DSUI.esc(r.team.cause)+'</span></div></div>'+
+          '<div class="sc-rec">'+r.w+'-'+r.l+'</div></a>';
+      }).join('')+
+      '<div class="table-foot"><span>+ 5 more teams</span></div></div>';
+  }).join('');
+
+  document.getElementById('team-grid').innerHTML = DS.TEAMS.slice(0,8).map(function(t){
+    return '<a class="team-tile" href="team.html?id='+t.id+'">'+
+      '<img src="'+t.logo+'" alt="" loading="lazy">'+
+      '<div><div class="name">'+DSUI.esc(t.name)+'</div>'+
+      '<div class="meta">'+t.league+' League</div></div></a>';
+  }).join('');
+
+  document.getElementById('reviews').innerHTML = DS.REVIEWS.map(function(r){
+    return '<div class="quote"><p>'+DSUI.esc(r.quote)+'</p><div class="quote-by">'+
+      '<img src="'+r.img+'" alt="" loading="lazy"><div><b>'+DSUI.esc(r.name)+'</b>'+
+      '<span>'+DSUI.esc(r.role)+'</span></div></div></div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>
