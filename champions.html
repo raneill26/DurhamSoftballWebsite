@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Champions | Durham Softball</title>
+<meta name="description" content="Past champions of the Durham Softball league, with their winning check photos.">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<div data-header="photos.html"></div>
+<div class="page-head">
+  <img class="page-head-bg" src="https://durhamsoftball.com/wp-content/uploads/2025/03/2025-Spring-Softball-Champs-1024x723.jpg" alt="">
+  <div class="wrap">
+    <div class="crumb"><a href="photos.html">Photos</a></div>
+    <h1 class="h-lg">Champions</h1>
+    <p>Every season ends with a check. Here are the teams that took the biggest one home for their charity.</p>
+  </div>
+</div>
+<main class="section">
+  <div class="wrap">
+    <div class="champ-grid" id="champs"></div>
+    <div id="champ-note" style="margin-top:34px"></div>
+  </div>
+</main>
+<div data-footer></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function(){
+  var list = DS.CHAMPIONS;
+  document.getElementById('champs').innerHTML = list.map(function(c){
+    return '<figure class="champ">'+
+      '<img src="'+c.photo+'" alt="'+DSUI.esc(c.caption||c.season)+'" loading="lazy">'+
+      '<figcaption class="champ-body">'+
+        '<div class="champ-season">'+DSUI.esc(c.season)+'</div>'+
+        (c.team
+          ? '<div class="champ-team">'+(c.league?c.league+' League: ':'')+DSUI.esc(c.team)+'</div>'
+          : '<div class="champ-team">Winning team not recorded yet</div>')+
+      '</figcaption></figure>';
+  }).join('');
+
+  document.getElementById('champ-note').innerHTML =
+    '<div class="champ-empty">'+
+      '<h3 class="h-sm">Earlier seasons still to add</h3>'+
+      '<p class="muted" style="margin:12px auto 0;max-width:520px;font-size:.95rem">'+
+        'Sixteen seasons have been played and only the ones with a confirmed check photo are shown. '+
+        'Drop the rest into <code>assets/js/data.js</code> under <code>CHAMPIONS</code> with a season, '+
+        'team name, and photo, and they will appear here automatically.</p>'+
+    '</div>';
+})();
+</script>
+</body>
+</html>

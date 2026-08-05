@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
-<title>Teams &amp; Partners — Durham Softball</title>
+<title>Teams &amp; Partners | Durham Softball</title>
 <meta name="description" content="The 20 Durham non-profits and community organizations behind the 2026 Summer season.">
 </head>
 <body>
@@ -25,7 +25,7 @@
   <div class="wrap">
     <div class="toolbar">
       <div class="seg" role="tablist" aria-label="Filter by league">
-        <button role="tab" aria-selected="true" data-league="all">All 20</button>
+        <button role="tab" aria-selected="true" data-league="all">All</button>
         <button role="tab" aria-selected="false" data-league="A">A League</button>
         <button role="tab" aria-selected="false" data-league="B">B League</button>
       </div>
@@ -46,7 +46,7 @@
 (function(){
   var state={league:'all',q:''};
   function render(){
-    var list=DS.TEAMS.filter(function(t){
+    var list=DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).filter(function(t){
       if(state.league!=='all'&&t.league!==state.league) return false;
       if(state.q&&(t.name+' '+t.cause).toLowerCase().indexOf(state.q)===-1) return false;
       return true;

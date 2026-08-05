@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Durham Softball — League data
-   All 80 games of the 2026 Summer season are REAL, transcribed from the
+   Durham Softball - League data
+   All 80 games of the 2026 Summer season are real, transcribed from the
    official 2026 Summer Calendar (which lists "Home vs. Away").
    Validated: 8 game days x 10 games, no team/time collisions,
    every team 4 home / 4 away, no cross-league matchups.
@@ -41,14 +41,46 @@
 
   /* ---------- Photos (from the league's own library) ---------- */
   var PHOTOS = [
-    { src:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg', caption:'2025 Spring champions', wide:true },
-    { src:CDN+'2024/01/Summer_08-04-768x857.jpg',                 caption:'Summer game day' },
-    { src:CDN+'2023/12/End-of-Season-scaled-e1704691499317-754x1024.jpg', caption:'End of season' },
-    { src:CDN+'2024/01/Summer_09-08-e1704335799316.jpg',          caption:'Out at the park' },
-    { src:CDN+'2024/01/PlayNCSponsored_SDLL_01.jpg',              caption:'South Durham Little League, sponsored by the league' },
-    { src:CDN+'2024/01/PlayNCSponsored_MIRA_01-1024x1024.jpg',    caption:'Miracle League of the Triangle' },
-    { src:CDN+'2024/01/PlayNCSponsored_APS_01-e1704689633414.jpg',caption:'The APS of Durham kennel we sponsor' }
+    { src:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg', caption:'Spring 2025 champions', season:'2025-spring', wide:true },
+    { src:CDN+'2024/01/Summer_08-04-768x857.jpg',                 caption:'Summer game day',      season:'2023-summer' },
+    { src:CDN+'2023/12/End-of-Season-scaled-e1704691499317-754x1024.jpg', caption:'End of season', season:'2023-summer' },
+    { src:CDN+'2024/01/Summer_09-08-e1704335799316.jpg',          caption:'Out at the park',      season:'2023-summer' },
+    { src:CDN+'2024/01/PlayNCSponsored_SDLL_01.jpg',              caption:'South Durham Little League, sponsored by the league', season:'sponsorships' },
+    { src:CDN+'2024/01/PlayNCSponsored_MIRA_01-1024x1024.jpg',    caption:'Miracle League of the Triangle', season:'sponsorships' },
+    { src:CDN+'2024/01/PlayNCSponsored_APS_01-e1704689633414.jpg',caption:'The APS of Durham kennel we sponsor', season:'sponsorships' }
   ];
+
+  /* Photo seasons. Season tags above are inferred from the league's own file
+     names and upload dates, so a few may need correcting. Add new seasons here
+     and tag photos with the matching id. */
+  var PHOTO_SEASONS = [
+    { id:'2025-spring',  label:'Spring 2025' },
+    { id:'2023-summer',  label:'Summer 2023' },
+    { id:'sponsorships', label:'Sponsorships' }
+  ];
+
+  /* ---------- Champions ----------
+     Only seasons we have a confirmed photo for are listed. Add past champions
+     here as their check photos turn up: each needs season, team, and photo. */
+  var CHAMPIONS = [
+    { season:'Spring 2025', league:'', team:'', teamId:null,
+      photo:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg',
+      caption:'Spring 2025 champions' }
+  ];
+
+  /* ---------- Season archive ----------
+     2026 Summer is live in this site. Earlier seasons still live on the
+     current WordPress site until their results are imported. */
+  var SEASON_ARCHIVE = [
+    { id:'2026-summer', label:'2026 Summer', live:true },
+    { id:'2025-summer', label:'2025 Summer', live:false,
+      standings:'https://durhamsoftball.com/2025-summer-standings/',
+      schedule:'https://durhamsoftball.com/schedule/2025-summer-calendar/' },
+    { id:'2025-spring', label:'2025 Spring', live:false,
+      standings:'https://durhamsoftball.com/2025-summer-standings/',
+      schedule:'https://durhamsoftball.com/schedule/2025-summer-calendar/' }
+  ];
+
   var HERO_PHOTO = CDN + '2025/03/2025-Spring-Softball-Champs-1024x723.jpg';
 
   /* ---------- Season config ---------- */
@@ -247,6 +279,19 @@
     });
   }
 
+  function standingsPosition(teamId, results){
+    var t = byId[teamId];
+    var rows = computeStandings(results).filter(function(r){ return r.team.league === t.league; });
+    rows.sort(function(a,b){
+      if(b.pct !== a.pct) return b.pct - a.pct;
+      if(b.diff !== a.diff) return b.diff - a.diff;
+      if(b.rs !== a.rs) return b.rs - a.rs;
+      return a.team.name.localeCompare(b.team.name);
+    });
+    for(var i=0;i<rows.length;i++) if(rows[i].team.id===teamId) return { pos:i+1, of:rows.length, row:rows[i] };
+    return null;
+  }
+
   var REVIEWS = [
     { quote:'Wonderful opportunity to support our local charities, while having a blast playing softball. Fun for the whole family!!', name:'Terry Morris', role:'Executive Director, Vets to Vets United', img:CDN+'2024/01/Reviews_Terry.jpg' },
     { quote:'Playing in this league, I have been able to meet people from throughout the Durham community and have fun playing a game I love, all while raising money for charities that give back directly to our community.', name:'Alex Turner', role:'Player, since 2018', img:CDN+'2024/01/Reviews_Alex.jpg' },
@@ -258,6 +303,9 @@
     LOGO: CDN + '2023/12/cropped-Durham-Softball-Logo-By-Play-NC.jpg',
     HERO_PHOTO: HERO_PHOTO,
     PHOTOS: PHOTOS,
+    PHOTO_SEASONS: PHOTO_SEASONS,
+    CHAMPIONS: CHAMPIONS,
+    SEASON_ARCHIVE: SEASON_ARCHIVE,
     TEAMS: TEAMS,
     byId: byId,
     SEASON: SEASON,
@@ -266,6 +314,7 @@
     teamGames: teamGames,
     SAMPLE_RESULTS: SAMPLE_RESULTS,
     computeStandings: computeStandings,
+    standingsPosition: standingsPosition,
     REVIEWS: REVIEWS
   };
 })(window);

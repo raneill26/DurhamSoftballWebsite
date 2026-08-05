@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
-<title>Photos — Durham Softball</title>
+<title>Photos | Durham Softball</title>
 <meta name="description" content="Game day photos from sixteen seasons of Durham Softball at Pineywood Park.">
 </head>
 <body>
@@ -23,11 +23,13 @@
 </div>
 <main class="section">
   <div class="wrap">
-    <div class="notice"><span></span><div>
-      <strong>These are the photos already on the league site.</strong> The gallery is built to take a
-      whole season's worth &mdash; drop new game-day shots in and they flow into this grid automatically.
-    </div></div>
+    <div class="toolbar">
+      <select class="field" data-season-filter aria-label="Choose a season"></select>
+      <span class="spacer"></span>
+      <a class="btn btn-outline btn-sm" href="champions.html">Champions</a>
+    </div>
     <div class="photo-grid-lg" id="gallery"></div>
+    <p class="muted" id="gallery-note" style="margin-top:20px;font-size:.9rem"></p>
     <div class="center" style="margin-top:42px">
       <p class="muted" style="margin-bottom:16px">More photos go up on Facebook after most game days.</p>
       <a class="btn btn-outline" href="https://www.facebook.com/durhamsoftball" target="_blank" rel="noopener">Facebook album</a>
@@ -38,8 +40,26 @@
 <script src="assets/js/data.js"></script>
 <script src="assets/js/site.js"></script>
 <script>
-document.querySelector('.notice span').innerHTML = DSUI.ICONS.info;
-document.getElementById('gallery').innerHTML = DSUI.photoBand(DS.PHOTOS,{allowWide:true});
+(function(){
+  var sel=document.querySelector('[data-season-filter]');
+  sel.innerHTML='<option value="all">All photos</option>'+
+    DS.PHOTO_SEASONS.map(function(s){
+      var n=DS.PHOTOS.filter(function(p){return p.season===s.id;}).length;
+      return '<option value="'+s.id+'">'+DSUI.esc(s.label)+' ('+n+')</option>';
+    }).join('');
+
+  function render(){
+    var v=sel.value;
+    var list=v==='all'?DS.PHOTOS:DS.PHOTOS.filter(function(p){return p.season===v;});
+    document.getElementById('gallery').innerHTML = list.length
+      ? DSUI.photoBand(list,{allowWide:true})
+      : '<p class="center muted" style="grid-column:1/-1;padding:50px 0">No photos filed under that season yet.</p>';
+    document.getElementById('gallery-note').textContent =
+      list.length+' photo'+(list.length===1?'':'s')+'. Season tags come from the league\'s own file names, so a few may need correcting.';
+  }
+  sel.addEventListener('change',render);
+  render();
+})();
 </script>
 </body>
 </html>

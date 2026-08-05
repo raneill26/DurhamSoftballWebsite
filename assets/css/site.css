@@ -430,3 +430,17 @@ a.gc-team-name:hover{color:var(--clay)}
 .footer-quote{font-family:var(--display);font-size:1.02rem;color:var(--gold);letter-spacing:.03em}
 
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Homepage team grid: fixed columns so rows always fill evenly */
+.team-grid-home{display:grid;gap:20px;grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.team-grid-home{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.team-grid-home{grid-template-columns:1fr}}
+
+/* Champions */
+.champ-grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.champ{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.champ img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--paper)}
+.champ-body{padding:18px 20px}
+.champ-season{font-family:var(--display);font-size:1.3rem;font-weight:700;text-transform:uppercase;line-height:1.1}
+.champ-team{color:var(--text-soft);margin-top:6px;font-size:.95rem}
+.champ-empty{border:1px dashed var(--line-2);border-radius:var(--r);padding:34px 24px;text-align:center;background:#fff}

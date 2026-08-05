@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
-<title>Schedule — Durham Softball</title>
+<title>Schedule | Durham Softball</title>
 <meta name="description" content="Full 2026 Summer schedule for Durham Softball. Every matchup shows the away and home team clearly labelled.">
 </head>
 <body>
@@ -18,12 +18,11 @@
   <div class="wrap">
     <div class="crumb">2026 Summer season</div>
     <h1 class="h-lg">Schedule</h1>
-    <p>Eight Sundays at Pineywood Park, first pitch 9:10 AM. Away team on top, home team below &mdash; no guessing.</p>
+    <p>Eight Sundays at Pineywood Park, first pitch at 9:10 AM.</p>
   </div>
 </div>
 <main class="section">
   <div class="wrap">
-    <div id="legend"></div>
     <div class="toolbar">
       <div class="seg" role="tablist" aria-label="Filter by league">
         <button role="tab" aria-selected="true" data-league="all">All games</button>
@@ -36,8 +35,9 @@
     </div>
     <div id="schedule-out"></div>
     <p class="muted center" style="margin-top:34px">
-      Rainouts and make-ups are announced on
-      <a href="https://x.com/PlayDurham" target="_blank" rel="noopener" style="color:var(--clay)">@PlayDurham</a> and
+      Rainouts and make-ups go out on the
+      <a href="mailto:playncinc@gmail.com?subject=Add%20me%20to%20the%20Durham%20Softball%20newsletter" style="color:var(--clay)">newsletter</a>,
+      <a href="https://x.com/PlayDurham" target="_blank" rel="noopener" style="color:var(--clay)">@PlayDurham</a>, and
       <a href="https://www.facebook.com/durhamsoftball" target="_blank" rel="noopener" style="color:var(--clay)">Facebook</a>.
     </p>
   </div>
@@ -48,8 +48,6 @@
 <script>
 (function(){
   var state={league:'all',team:'all'};
-  document.getElementById('legend').innerHTML = DSUI.legendHTML();
-
   var sel=document.querySelector('[data-team-filter]');
   sel.innerHTML='<option value="all">All teams</option>'+
     DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
@@ -57,7 +55,7 @@
 
   var jump=document.querySelector('[data-week-jump]');
   jump.innerHTML='<option value="">Jump to week…</option>'+
-    DS.SCHEDULE.map(function(d){return '<option value="week-'+d.week+'">Week '+d.week+' — '+
+    DS.SCHEDULE.map(function(d){return '<option value="week-'+d.week+'">Week '+d.week+' - '+
       DSUI.fmtDate(d.date,{month:'short',day:'numeric'})+'</option>';}).join('');
   jump.addEventListener('change',function(){
     if(!this.value) return;

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
-<title>Team — Durham Softball</title>
+<title>Team | Durham Softball</title>
 </head>
 <body>
 <div data-header="teams.html"></div>
@@ -32,11 +32,16 @@
     return;
   }
 
-  document.title = team.name + ' — Durham Softball';
+  document.title = team.name + ' - Durham Softball';
 
   var games = DS.teamGames(team.id);
   var st = DS.computeStandings(null).filter(function(r){return r.team.id===team.id;})[0];
-  var homeCount = games.filter(function(g){return g.isHome;}).length;
+  var pos = DS.standingsPosition(team.id, null);
+
+  function ord(n){
+    var s=['th','st','nd','rd'], v=n%100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
 
   var sched = games.map(function(g){
     var d = new Date(g.day.date+'T12:00:00');
@@ -64,9 +69,10 @@
             '<h1 class="h-lg">'+DSUI.esc(team.name)+'</h1>'+
             '<div class="team-rec">'+
               '<div><b>'+st.w+'-'+st.l+(st.t?'-'+st.t:'')+'</b><span>Record</span></div>'+
-              '<div><b>'+games.length+'</b><span>Games</span></div>'+
-              '<div><b>'+homeCount+'</b><span>Home</span></div>'+
-              '<div><b>'+(games.length-homeCount)+'</b><span>Away</span></div>'+
+              '<div><b>'+st.rs+'</b><span>Runs scored</span></div>'+
+              '<div><b>'+(st.diff>0?'+':'')+st.diff+'</b><span>Run diff</span></div>'+
+              '<div><b>'+team.league+'</b><span>League</span></div>'+
+              '<div><b>'+ord(pos.pos)+'</b><span>In '+team.league+' League</span></div>'+
             '</div>'+
           '</div>'+
         '</div>'+
@@ -81,7 +87,7 @@
           '<h2 class="h-md" style="margin-bottom:18px">'+DS.SEASON.label+' schedule</h2>'+
           '<div class="tsched">'+sched+'</div>'+
           '<p class="muted" style="font-size:.85rem;margin-top:14px">'+
-            'All games at '+DS.SEASON.venue+'. "Home" means this team bats last.</p>'+
+            'All games at '+DS.SEASON.venue+'.</p>'+
         '</section>'+
 
         '<section>'+
@@ -92,7 +98,7 @@
               DSUI.esc(team.cause)+'</p>'+
             (team.blurb
               ? '<p style="color:var(--text-soft)">'+DSUI.esc(team.blurb)+'</p>'
-              : '<p class="muted" style="font-size:.93rem">The full charity write-up lives on the current league site &mdash; '+
+              : '<p class="muted" style="font-size:.93rem">The full charity write-up lives on the current league site '+
                 'it would be pulled in here automatically once this design is wired up to the real content.</p>')+
             '<div class="btn-row" style="margin-top:20px">'+
               (team.site?'<a class="btn btn-primary btn-sm" href="'+team.site+'" target="_blank" rel="noopener">Visit '+DSUI.esc(team.short)+'</a>':'')+

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Durham Softball — shared UI
+   Durham Softball - shared UI
    ========================================================================== */
 (function (global) {
   'use strict';
@@ -59,7 +59,7 @@
       '<header class="site-header">'+
         '<div class="wrap header-bar">'+
           '<a class="brand" href="index.html">'+
-            '<img src="'+DS.LOGO+'" alt="Durham Softball — Play Ball Y\'all">'+
+            '<img src="'+DS.LOGO+'" alt="Durham Softball, Play Ball Y\'all">'+
             '<span class="brand-txt"><span class="brand-name">Durham Softball</span>'+
             '<span class="brand-tag">Play Ball Y\'all</span></span>'+
           '</a>'+
@@ -116,6 +116,7 @@
             '<li><a href="standings.html">Standings</a></li>'+
             '<li><a href="teams.html">Teams &amp; partners</a></li>'+
             '<li><a href="photos.html">Photos</a></li>'+
+            '<li><a href="champions.html">Champions</a></li>'+
             '<li><a href="rules.html">Rules</a></li></ul></div>'+
           '<div><h4>About</h4><ul>'+
             '<li><a href="about.html">About Durham Softball</a></li>'+
@@ -172,19 +173,10 @@
       '</div>'+
       (opts.compact?'':
         '<div class="gc-foot">'+
-          '<span class="gc-note">'+ICONS.info+'Home team bats last</span>'+
+          '<span class="gc-note">'+esc(game.venue)+'</span>'+
           '<a class="gc-link" href="https://durhamsoftball.com/game/'+game.gameId+'/" target="_blank" rel="noopener">Game details '+ICONS.arrow+'</a>'+
         '</div>')+
     '</article>';
-  }
-
-  function legendHTML(){
-    return '<div class="legend">'+
-      '<span class="legend-item"><strong>Reading a matchup:</strong></span>'+
-      '<span class="legend-item"><span class="tag-ha tag-away">Away</span> on top</span>'+
-      '<span class="legend-item"><span class="tag-ha tag-home">'+ICONS.plate+'Home</span> below, highlighted</span>'+
-      '<span class="legend-item">Home bats last and takes the third-base dugout.</span>'+
-    '</div>';
   }
 
   /* ---------- Standings ---------- */
@@ -203,8 +195,8 @@
     if(dir==='asc') s.reverse();
     return s;
   }
-  function last5HTML(f){return f.length?'<span class="last5">'+f.map(function(x){return '<i class="'+x+'">'+x.toUpperCase()+'</i>';}).join('')+'</span>':'<span class="muted">&mdash;</span>';}
-  function streakHTML(s){return s.n?'<span class="streak streak-'+s.type+'">'+s.type.toUpperCase()+s.n+'</span>':'<span class="muted">&mdash;</span>';}
+  function last5HTML(f){return f.length?'<span class="last5">'+f.map(function(x){return '<i class="'+x+'">'+x.toUpperCase()+'</i>';}).join('')+'</span>':'<span class="muted">-</span>';}
+  function streakHTML(s){return s.n?'<span class="streak streak-'+s.type+'">'+s.type.toUpperCase()+s.n+'</span>':'<span class="muted">-</span>';}
 
   function standingsTable(rows,opts){
     opts=opts||{};
@@ -263,7 +255,7 @@
     handle=handle||DS.SEASON.xHandle;
     host.innerHTML=
       '<div class="x-feed">'+
-        '<div class="x-head">'+ICONS.x+'<b>@'+handle+'</b><span>Rainouts &amp; announcements</span>'+
+        '<div class="x-head">'+ICONS.x+'<b>@'+handle+'</b><span>Rainouts and announcements</span>'+
         '<span class="spacer"></span>'+
         '<a class="btn btn-outline btn-sm" href="https://x.com/'+handle+'" target="_blank" rel="noopener">Follow</a></div>'+
         '<div class="x-body" data-x-body>'+
@@ -276,7 +268,7 @@
     function fallback(){
       body.innerHTML=
         '<div class="x-fallback">'+
-          '<p>The live X timeline could not load &mdash; X often blocks embedded feeds. '+
+          '<p>The live X timeline could not load. X often blocks embedded feeds. '+
           'Rainouts and announcements are posted to @'+handle+'.</p>'+
           '<div class="btn-row" style="justify-content:center">'+
             '<a class="btn btn-primary btn-sm" href="https://x.com/'+handle+'" target="_blank" rel="noopener">Open @'+handle+' on X</a>'+
@@ -307,7 +299,7 @@
 
   function init(){ renderHeader(); renderFooter(); }
 
-  global.DSUI={esc:esc,fmtDate:fmtDate,pct:pct,qs:qs,ICONS:ICONS,gameCard:gameCard,legendHTML:legendHTML,
+  global.DSUI={esc:esc,fmtDate:fmtDate,pct:pct,qs:qs,ICONS:ICONS,gameCard:gameCard,
     standingsTable:standingsTable,sortRows:sortRows,mountXFeed:mountXFeed,photoBand:photoBand,init:init};
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);

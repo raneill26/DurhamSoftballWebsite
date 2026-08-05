@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
-<title>Standings — Durham Softball</title>
+<title>Standings | Durham Softball</title>
 <meta name="description" content="2026 Summer standings for the Durham Softball A and B Leagues.">
 </head>
 <body>
@@ -18,16 +18,17 @@
   <div class="wrap">
     <div class="crumb">2026 Summer season</div>
     <h1 class="h-lg">Standings</h1>
-    <p>Wins drive the donation pool &mdash; the better a team finishes, the bigger the share their non-profit takes home.</p>
+    <p>Wins drive the donation pool the better a team finishes, the bigger the share their non-profit takes home.</p>
   </div>
 </div>
 <main class="section">
   <div class="wrap">
     <div class="notice"><span></span><div>
-      <strong>The season hasn't started</strong> &mdash; opening day is August 16, so every team is genuinely 0-0.
+      <strong>The season hasn't started</strong> opening day is August 16, so every team is genuinely 0-0.
       Switch to <em>Sample results</em> to see what a populated table looks like.
     </div></div>
     <div class="toolbar">
+      <select class="field" data-season aria-label="Choose a season"></select>
       <div class="seg" role="tablist" aria-label="Filter by league">
         <button role="tab" aria-selected="true" data-league="both">Both leagues</button>
         <button role="tab" aria-selected="false" data-league="A">A League</button>
@@ -54,10 +55,42 @@
 <script src="assets/js/site.js"></script>
 <script>
 (function(){
-  var state={league:'both',mode:'live',sortKey:'pct',sortDir:'desc'};
+  var state={league:'both',mode:'live',sortKey:'pct',sortDir:'desc',season:DS.SEASON_ARCHIVE[0].id};
   document.querySelector('.notice span').innerHTML = DSUI.ICONS.info;
 
+  var seasonSel=document.querySelector('[data-season]');
+  seasonSel.innerHTML=DS.SEASON_ARCHIVE.map(function(sn){
+    return '<option value="'+sn.id+'">'+DSUI.esc(sn.label)+(sn.live?'':' (archive)')+'</option>';
+  }).join('');
+  seasonSel.addEventListener('change',function(){state.season=this.value;render();});
+
+  function currentSeason(){
+    return DS.SEASON_ARCHIVE.filter(function(sn){return sn.id===state.season;})[0];
+  }
+
   function render(){
+    var sn=currentSeason();
+    var notice=document.querySelector('.notice');
+    var controls=document.querySelectorAll('[data-league],[data-mode]');
+
+    if(!sn.live){
+      notice.style.display='none';
+      controls.forEach(function(c){c.closest('.seg').style.display='none';});
+      document.getElementById('standings-out').innerHTML=
+        '<div class="card card-pad center">'+
+          '<h3 class="h-sm">'+DSUI.esc(sn.label)+' results are not imported yet</h3>'+
+          '<p class="muted" style="margin:12px auto 20px;max-width:460px;font-size:.95rem">'+
+            'This season still lives on the current league site. Once its final standings are '+
+            'brought across they will show here the same way '+DS.SEASON_ARCHIVE[0].label+' does.</p>'+
+          '<div class="btn-row" style="justify-content:center">'+
+            '<a class="btn btn-primary btn-sm" href="'+sn.standings+'" target="_blank" rel="noopener">'+DSUI.esc(sn.label)+' standings</a>'+
+            '<a class="btn btn-outline btn-sm" href="'+sn.schedule+'" target="_blank" rel="noopener">'+DSUI.esc(sn.label)+' schedule</a>'+
+          '</div></div>';
+      return;
+    }
+    notice.style.display='';
+    controls.forEach(function(c){c.closest('.seg').style.display='';});
+
     var results = state.mode==='sample' ? DS.SAMPLE_RESULTS : null;
     var all = DS.computeStandings(results);
     var leagues = state.league==='both' ? ['A','B'] : [state.league];
@@ -65,7 +98,7 @@
     document.getElementById('standings-out').innerHTML = leagues.map(function(lg){
       var rows=all.filter(function(r){return r.team.league===lg;});
       return '<div data-host="'+lg+'">'+DSUI.standingsTable(rows,{
-        title: DS.SEASON.label+' — '+lg+' League', sortKey:state.sortKey, sortDir:state.sortDir
+        title: DS.SEASON.label+' - '+lg+' League', sortKey:state.sortKey, sortDir:state.sortDir
       })+'</div>';
     }).join('');
 
