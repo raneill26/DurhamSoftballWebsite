@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>League admin | Durham Softball</title>
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<div data-header=""></div>
+
+<div class="page-head">
+  <div class="wrap">
+    <div class="crumb">Owner only</div>
+    <h1 class="h-lg">League admin</h1>
+    <p>Add photos, record champions, and roll the league into a new season. No code required.</p>
+  </div>
+</div>
+
+<main class="section">
+  <div class="wrap" id="admin-root"></div>
+</main>
+
+<div data-footer></div>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function(){
+  var root=document.getElementById('admin-root');
+  var tab='photos';
+
+  function msg(kind,text){
+    return '<div class="form-msg '+kind+'">'+text+'</div>';
+  }
+
+  /* ---------------- login ---------------- */
+  function login(err){
+    root.innerHTML='<div class="form-card" style="max-width:460px;margin:0 auto">'+
+      (DSAPI.configured()?'':msg('warn','<strong>Not connected yet.</strong> Add your Supabase keys to '+
+        '<code>assets/js/config.js</code> and run <code>supabase/schema.sql</code> first. See SETUP.md.'))+
+      (err?msg('err',DSUI.esc(err)):'')+
+      '<h2 class="h-sm" style="margin-bottom:16px">Sign in</h2>'+
+      '<div class="field-row"><label for="ap">Admin passcode</label>'+
+      '<input type="password" id="ap" autocomplete="current-password"></div>'+
+      '<button class="btn btn-primary" id="ago" style="width:100%">Sign in</button></div>';
+
+    document.getElementById('ago').addEventListener('click',function(){
+      var v=document.getElementById('ap').value.trim();
+      if(!v) return login('Enter the admin passcode.');
+      if(!DSAPI.configured()) return login('No database connected yet.');
+      this.disabled=true; this.textContent='Checking…';
+      DSAPI.adminLogin(v).then(shell).catch(function(){ login('That passcode did not match.'); });
+    });
+    document.getElementById('ap').addEventListener('keydown',function(e){
+      if(e.key==='Enter'){e.preventDefault();document.getElementById('ago').click();}
+    });
+  }
+
+  /* ---------------- shell ---------------- */
+  function shell(){
+    root.innerHTML=
+      '<div class="admin-tabs">'+
+        ['photos','champions','seasons','passcodes'].map(function(t){
+          return '<button data-tab="'+t+'" aria-selected="'+(t===tab)+'">'+t+'</button>';
+        }).join('')+
+        '<span style="margin-left:auto"></span>'+
+        '<button data-tab="_out" style="color:var(--clay)">Sign out</button>'+
+      '</div><div id="panel"></div>';
+
+    root.querySelectorAll('[data-tab]').forEach(function(b){
+      b.addEventListener('click',function(){
+        var t=b.getAttribute('data-tab');
+        if(t==='_out'){ DSAPI.adminLogout(); return login(); }
+        tab=t; shell();
+      });
+    });
+    ({photos:photosPanel,champions:champsPanel,seasons:seasonsPanel,passcodes:passPanel})[tab]();
+  }
+
+  function panel(html){ document.getElementById('panel').innerHTML=html; }
+
+  /* ---------------- photos ---------------- */
+  function photosPanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:14px">Add photos</h2>'+
+      '<div class="drop-zone" id="dz">Drag photos here, or <label style="color:var(--clay);cursor:pointer;text-decoration:underline">'+
+      'choose files<input type="file" id="file" accept="image/*" multiple hidden></label></div>'+
+      '<div id="up-msg" style="margin-top:14px"></div></div>'+
+      '<h2 class="h-sm" style="margin:28px 0 14px">Photo library</h2><div id="plist">Loading…</div>');
+
+    var dz=document.getElementById('dz'), input=document.getElementById('file');
+    ['dragenter','dragover'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.add('over');});});
+    ['dragleave','drop'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.remove('over');});});
+    dz.addEventListener('drop',function(ev){ handle(ev.dataTransfer.files); });
+    input.addEventListener('change',function(){ handle(this.files); });
+
+    function handle(files){
+      var list=[].slice.call(files); if(!list.length) return;
+      var out=document.getElementById('up-msg');
+      out.innerHTML=msg('warn','Uploading '+list.length+' photo'+(list.length>1?'s':'')+'…');
+      Promise.all(list.map(function(f){
+        return DSAPI.uploadPhoto(f).then(function(url){
+          return DSAPI.savePhoto({url:url,caption:f.name.replace(/\.[^.]+$/,''),season_id:null});
+        });
+      })).then(function(){ out.innerHTML=msg('ok','Uploaded.'); loadPhotos(); })
+        .catch(function(e){ out.innerHTML=msg('err','Upload failed: '+DSUI.esc(e.message)); });
+    }
+    loadPhotos();
+  }
+
+  function loadPhotos(){
+    var host=document.getElementById('plist'); if(!host) return;
+    DSAPI.listPhotos().then(function(rows){
+      if(!rows.length){ host.innerHTML='<p class="muted">No photos uploaded yet.</p>'; return; }
+      host.innerHTML=rows.map(function(p){
+        return '<div class="admin-item" data-id="'+p.id+'">'+
+          '<img src="'+p.url+'" alt="">'+
+          '<div class="meta">'+
+            '<input type="text" value="'+DSUI.esc(p.caption||'')+'" data-cap placeholder="Caption" '+
+              'style="width:100%;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.9rem">'+
+            '<input type="text" value="'+DSUI.esc(p.season_id||'')+'" data-season placeholder="Season id, e.g. 2026-summer" '+
+              'style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.85rem">'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:6px">'+
+            '<button class="btn btn-outline btn-sm" data-save>Save</button>'+
+            '<button class="btn btn-outline btn-sm" data-del style="color:var(--loss)">Delete</button>'+
+          '</div></div>';
+      }).join('');
+
+      host.querySelectorAll('.admin-item').forEach(function(row){
+        var id=row.getAttribute('data-id');
+        row.querySelector('[data-save]').addEventListener('click',function(){
+          this.textContent='Saving…';
+          DSAPI.savePhoto({id:id,url:row.querySelector('img').src,
+            caption:row.querySelector('[data-cap]').value,
+            season_id:row.querySelector('[data-season]').value||null})
+            .then(function(){ row.querySelector('[data-save]').textContent='Saved'; })
+            .catch(function(e){ alert('Could not save: '+e.message); });
+        });
+        row.querySelector('[data-del]').addEventListener('click',function(){
+          if(!confirm('Delete this photo?')) return;
+          DSAPI.deletePhoto(id).then(loadPhotos);
+        });
+      });
+    }).catch(function(e){ host.innerHTML=msg('err','Could not load photos: '+DSUI.esc(e.message)); });
+  }
+
+  /* ---------------- champions ---------------- */
+  function champsPanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:14px">Record a champion</h2>'+
+      '<div class="field-row"><label for="cl">Season label</label><input type="text" id="cl" placeholder="Spring 2026"></div>'+
+      '<div class="field-row"><label for="ct">Winning team</label><input type="text" id="ct" placeholder="BookHarvest"></div>'+
+      '<div class="field-row"><label for="cg">League</label><input type="text" id="cg" placeholder="A"></div>'+
+      '<div class="field-row"><label for="cp">Check photo URL</label><input type="text" id="cp" placeholder="Paste a photo URL, or upload on the Photos tab first"></div>'+
+      '<button class="btn btn-primary" id="csave">Add champion</button><div id="cmsg" style="margin-top:12px"></div></div>'+
+      '<h2 class="h-sm" style="margin:28px 0 14px">Recorded champions</h2><div id="clist">Loading…</div>');
+
+    document.getElementById('csave').addEventListener('click',function(){
+      var label=document.getElementById('cl').value.trim();
+      if(!label) return document.getElementById('cmsg').innerHTML=msg('err','Season label is required.');
+      DSAPI.saveChampion({label:label,team_name:document.getElementById('ct').value.trim(),
+        league:document.getElementById('cg').value.trim(),photo_url:document.getElementById('cp').value.trim()})
+        .then(function(){ document.getElementById('cmsg').innerHTML=msg('ok','Added.'); loadChamps(); })
+        .catch(function(e){ document.getElementById('cmsg').innerHTML=msg('err',DSUI.esc(e.message)); });
+    });
+    loadChamps();
+  }
+  function loadChamps(){
+    var host=document.getElementById('clist'); if(!host) return;
+    DSAPI.listChampions().then(function(rows){
+      host.innerHTML=rows.length?rows.map(function(c){
+        return '<div class="admin-item" data-id="'+c.id+'">'+
+          (c.photo_url?'<img src="'+c.photo_url+'" alt="">':'<div></div>')+
+          '<div class="meta"><b>'+DSUI.esc(c.label)+'</b>'+
+          '<span>'+DSUI.esc([c.league,c.team_name].filter(Boolean).join(' League: ')||'Team not recorded')+'</span></div>'+
+          '<button class="btn btn-outline btn-sm" data-del style="color:var(--loss)">Delete</button></div>';
+      }).join(''):'<p class="muted">No champions recorded yet.</p>';
+      host.querySelectorAll('[data-del]').forEach(function(b){
+        b.addEventListener('click',function(){
+          var id=b.closest('.admin-item').getAttribute('data-id');
+          if(confirm('Delete this champion?')) DSAPI.deleteChampion(id).then(loadChamps);
+        });
+      });
+    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
+  }
+
+  /* ---------------- seasons ---------------- */
+  function seasonsPanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:6px">Start a new season</h2>'+
+      '<p class="muted" style="font-size:.9rem;margin-bottom:16px">This creates the season, optionally copies '+
+      'the current charities across as teams, and makes it the live one. Records start fresh.</p>'+
+      '<div class="field-row"><label for="sid">Season id</label><input type="text" id="sid" placeholder="2027-spring">'+
+      '<div class="hint">Lowercase, no spaces. Used internally.</div></div>'+
+      '<div class="field-row"><label for="slab">Display name</label><input type="text" id="slab" placeholder="2027 Spring"></div>'+
+      '<div class="field-row"><label for="sdate">First game day</label><input type="text" id="sdate" placeholder="2027-03-14"></div>'+
+      '<div class="check-row"><input type="checkbox" id="scopy" checked><label for="scopy">Carry this season’s charities over as teams</label></div>'+
+      '<div class="check-row"><input type="checkbox" id="scur" checked><label for="scur">Make it the live season straight away</label></div>'+
+      '<button class="btn btn-primary" id="snew">Create season</button><div id="smsg" style="margin-top:12px"></div></div>'+
+      '<h2 class="h-sm" style="margin:28px 0 14px">All seasons</h2><div id="slist">Loading…</div>');
+
+    document.getElementById('snew').addEventListener('click',function(){
+      var id=document.getElementById('sid').value.trim();
+      var label=document.getElementById('slab').value.trim();
+      if(!id||!label) return document.getElementById('smsg').innerHTML=msg('err','Season id and display name are both required.');
+      this.disabled=true; this.textContent='Creating…';
+      DSAPI.newSeason({id:id,label:label,starts_on:document.getElementById('sdate').value.trim()||null,
+        copy_teams:document.getElementById('scopy').checked,make_current:document.getElementById('scur').checked})
+        .then(function(){ seasonsPanel(); })
+        .catch(function(e){
+          document.getElementById('snew').disabled=false;
+          document.getElementById('snew').textContent='Create season';
+          document.getElementById('smsg').innerHTML=msg('err',DSUI.esc(e.message));
+        });
+    });
+    loadSeasons();
+  }
+  function loadSeasons(){
+    var host=document.getElementById('slist'); if(!host) return;
+    DSAPI.listSeasons().then(function(rows){
+      host.innerHTML=rows.length?rows.map(function(s){
+        return '<div class="admin-item" data-id="'+DSUI.esc(s.id)+'"><div></div>'+
+          '<div class="meta"><b>'+DSUI.esc(s.label)+(s.is_current?' <span class="pill pill-gold">Live</span>':'')+'</b>'+
+          '<span>'+DSUI.esc(s.id)+' · '+s.team_count+' teams'+(s.starts_on?' · opens '+s.starts_on:'')+'</span></div>'+
+          (s.is_current?'<div></div>':'<button class="btn btn-outline btn-sm" data-cur>Make live</button>')+'</div>';
+      }).join(''):'<p class="muted">No seasons yet.</p>';
+      host.querySelectorAll('[data-cur]').forEach(function(b){
+        b.addEventListener('click',function(){
+          DSAPI.setCurrentSeason(b.closest('.admin-item').getAttribute('data-id')).then(loadSeasons);
+        });
+      });
+    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
+  }
+
+  /* ---------------- team passcodes ---------------- */
+  function passPanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:6px">Team passcodes</h2>'+
+      '<p class="muted" style="font-size:.9rem;margin-bottom:18px">Captains use these to log attendance. '+
+      'Rotate them each season and give each captain only their own.</p>'+
+      DS.TEAMS.map(function(t){
+        return '<div class="admin-item" data-id="'+t.id+'"><img src="'+t.logo+'" alt="">'+
+          '<div class="meta"><b>'+DSUI.esc(t.name)+'</b>'+
+          '<input type="text" data-code placeholder="New passcode" '+
+          'style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.9rem"></div>'+
+          '<button class="btn btn-outline btn-sm" data-set>Set</button></div>';
+      }).join('')+'</div>');
+
+    document.querySelectorAll('[data-set]').forEach(function(b){
+      b.addEventListener('click',function(){
+        var row=b.closest('.admin-item');
+        var code=row.querySelector('[data-code]').value.trim();
+        if(code.length<4) return alert('Use at least 4 characters.');
+        b.textContent='Saving…';
+        DSAPI.setTeamPasscode(row.getAttribute('data-id'),code)
+          .then(function(){ b.textContent='Set'; row.querySelector('[data-code]').value=''; })
+          .catch(function(e){ b.textContent='Set'; alert(e.message); });
+      });
+    });
+  }
+
+  var s=DSAPI.adminSession();
+  if(s) shell(); else login();
+})();
+</script>
+</body>
+</html>

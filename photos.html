@@ -37,28 +37,55 @@
   </div>
 </main>
 <div data-footer></div>
+<script src="assets/js/config.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
 <script src="assets/js/site.js"></script>
 <script>
 (function(){
+  var PHOTOS=DS.PHOTOS, SEASONS=DS.PHOTO_SEASONS;
   var sel=document.querySelector('[data-season-filter]');
   sel.innerHTML='<option value="all">All photos</option>'+
-    DS.PHOTO_SEASONS.map(function(s){
-      var n=DS.PHOTOS.filter(function(p){return p.season===s.id;}).length;
+    SEASONS.map(function(s){
+      var n=PHOTOS.filter(function(p){return p.season===s.id;}).length;
       return '<option value="'+s.id+'">'+DSUI.esc(s.label)+' ('+n+')</option>';
     }).join('');
 
   function render(){
     var v=sel.value;
-    var list=v==='all'?DS.PHOTOS:DS.PHOTOS.filter(function(p){return p.season===v;});
+    var list=v==='all'?PHOTOS:PHOTOS.filter(function(p){return p.season===v;});
     document.getElementById('gallery').innerHTML = list.length
       ? DSUI.photoBand(list,{allowWide:true})
       : '<p class="center muted" style="grid-column:1/-1;padding:50px 0">No photos filed under that season yet.</p>';
     document.getElementById('gallery-note').textContent =
       list.length+' photo'+(list.length===1?'':'s')+'. Season tags come from the league\'s own file names, so a few may need correcting.';
   }
+  function fillSeasons(){
+    sel.innerHTML='<option value="all">All photos</option>'+
+      SEASONS.map(function(s){
+        var n=PHOTOS.filter(function(p){return p.season===s.id;}).length;
+        return '<option value="'+s.id+'">'+DSUI.esc(s.label)+' ('+n+')</option>';
+      }).join('');
+  }
+
   sel.addEventListener('change',render);
-  render();
+  fillSeasons(); render();
+
+  // If a database is connected, its photo library wins over the ones in data.js.
+  if(DSAPI.configured()){
+    DSAPI.listPhotos().then(function(rows){
+      if(!rows || !rows.length) return;
+      PHOTOS=rows.map(function(r){
+        return { src:r.url, caption:r.caption||'', season:r.season_id||'unfiled', wide:r.is_wide };
+      });
+      var ids={};
+      PHOTOS.forEach(function(p){ ids[p.season]=true; });
+      SEASONS=Object.keys(ids).map(function(id){
+        return { id:id, label: id==='unfiled' ? 'Unfiled' : id.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) };
+      });
+      fillSeasons(); render();
+    }).catch(function(){ /* keep the built-in photos */ });
+  }
 })();
 </script>
 </body>

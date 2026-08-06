@@ -39,6 +39,40 @@
   var byId = {};
   TEAMS.forEach(function (t) { byId[t.id] = t; });
 
+
+  /* ---------- Partner charities without an active team ----------
+     These organisations are still partnered with Durham Softball, they just
+     do not have a team fielded this season. They appear on the charities page
+     with a "Partner" tag instead of an A or B League tag, and they are NOT
+     offered on the registration team dropdown.
+     status: 'partner' = current partner, no team this season
+             'former'  = past partner
+     Sourced from the league's current Non-Profit Partners menu. */
+  var PARTNERS = [
+    { id:'c2c',    name:'Crayons2Calculators',                 status:'partner', logo:CDN+'2023/12/TeamSquare_Crayons2Calculators-150x150.jpg', url:'https://durhamsoftball.com/teams/crayons2calculators/', cause:'School supplies for classrooms' },
+    { id:'dbyal',  name:'Durham Bulls Youth Athletic League',   status:'partner', logo:'',                                                        url:'https://durhamsoftball.com/teams/durham-bulls-youth-athletic-league/', cause:'Youth athletics in Durham' },
+    { id:'fmf',    name:'Families Moving Forward',              status:'partner', logo:CDN+'2023/12/TeamSquare_FamiliesMovingForward2023-Copy-150x150.jpg', url:'https://durhamsoftball.com/teams/families-moving-forward/', cause:'Housing for families' },
+    { id:'plaync', name:'Play NC',                              status:'partner', logo:CDN+'2024/03/2024_Square_PlayNC-150x150.jpg',              url:'https://durhamsoftball.com/teams/play-nc/', cause:'The non-profit that runs the league' },
+    { id:'presdur',name:'Preservation Durham',                  status:'partner', logo:CDN+'2025/03/PreservationDurham-150x150.jpg',              url:'https://durhamsoftball.com/teams/preservation-durham/', cause:'Historic preservation' },
+    { id:'swing',  name:'SwingPals',                            status:'partner', logo:CDN+'2023/12/TeamSquare_SwingPals-150x150.jpg',            url:'https://durhamsoftball.com/teams/swingpals/', cause:'Golf and mentorship for youth' },
+
+    { id:'cpcanc', name:'Central Piedmont Community Action',    status:'former',  logo:'', url:'https://durhamsoftball.com/teams/central-piedmont-community-action-of-north-carolina/', cause:'Community action agency' },
+    { id:'dwd',    name:'Don\u2019t Waste Durham',                 status:'former',  logo:'', url:'https://durhamsoftball.com/teams/dont-waste-durham/', cause:'Waste reduction' },
+    { id:'treesd', name:'TreesDurham',                          status:'former',  logo:'', url:'https://durhamsoftball.com/teams/treesdurham/', cause:'Tree planting and canopy' }
+  ];
+
+  /* Every organisation the charities page shows: active teams first, then
+     partners without a team, then former partners. */
+  function allOrgs(){
+    return TEAMS.map(function(t){
+      return { id:t.id, name:t.name, logo:t.logo, url:t.url, cause:t.cause,
+               status:t.league, isTeam:true };
+    }).concat(PARTNERS.map(function(p){
+      return { id:p.id, name:p.name, logo:p.logo, url:p.url, cause:p.cause,
+               status:p.status, isTeam:false };
+    }));
+  }
+
   /* ---------- Photos (from the league's own library) ---------- */
   var PHOTOS = [
     { src:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg', caption:'Spring 2025 champions', season:'2025-spring', wide:true },
@@ -307,6 +341,8 @@
     CHAMPIONS: CHAMPIONS,
     SEASON_ARCHIVE: SEASON_ARCHIVE,
     TEAMS: TEAMS,
+    PARTNERS: PARTNERS,
+    allOrgs: allOrgs,
     byId: byId,
     SEASON: SEASON,
     SCHEDULE: SCHEDULE,

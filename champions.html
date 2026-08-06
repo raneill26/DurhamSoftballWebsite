@@ -28,11 +28,13 @@
   </div>
 </main>
 <div data-footer></div>
+<script src="assets/js/config.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
 <script src="assets/js/site.js"></script>
 <script>
 (function(){
-  var list = DS.CHAMPIONS;
+  function draw(list){
   document.getElementById('champs').innerHTML = list.map(function(c){
     return '<figure class="champ">'+
       '<img src="'+c.photo+'" alt="'+DSUI.esc(c.caption||c.season)+'" loading="lazy">'+
@@ -43,14 +45,26 @@
           : '<div class="champ-team">Winning team not recorded yet</div>')+
       '</figcaption></figure>';
   }).join('');
+  }
+  draw(DS.CHAMPIONS);
+
+  if(DSAPI.configured()){
+    DSAPI.listChampions().then(function(rows){
+      if(!rows || !rows.length) return;
+      draw(rows.map(function(r){
+        return { season:r.label, league:r.league||'', team:r.team_name||'',
+                 photo:r.photo_url||'', caption:r.caption||r.label };
+      }));
+    }).catch(function(){ /* keep the built-in list */ });
+  }
 
   document.getElementById('champ-note').innerHTML =
     '<div class="champ-empty">'+
       '<h3 class="h-sm">Earlier seasons still to add</h3>'+
       '<p class="muted" style="margin:12px auto 0;max-width:520px;font-size:.95rem">'+
         'Sixteen seasons have been played and only the ones with a confirmed check photo are shown. '+
-        'Drop the rest into <code>assets/js/data.js</code> under <code>CHAMPIONS</code> with a season, '+
-        'team name, and photo, and they will appear here automatically.</p>'+
+        'Add the rest from the <a href="admin.html" style="color:var(--clay)">admin page</a> '+
+        'and they will appear here automatically.</p>'+
     '</div>';
 })();
 </script>

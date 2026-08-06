@@ -50,6 +50,16 @@
       });
   }
 
+  /* ---------------- admin ---------------- */
+  var AKEY = 'ds_admin_session';
+  function saveAdmin(s){ try{ sessionStorage.setItem(AKEY, JSON.stringify(s)); }catch(e){} }
+  function loadAdmin(){
+    try{ var s=JSON.parse(sessionStorage.getItem(AKEY)||'null');
+      if(s && new Date(s.expires_at) > new Date()) return s; }catch(e){}
+    return null;
+  }
+  function adminToken(){ var s=loadAdmin(); if(!s) throw new Error('NO_ADMIN'); return s.token; }
+
   global.DSAPI = {
     configured: configured,
     session: loadSession,
@@ -79,6 +89,66 @@
       });
     },
 
+    /* ---- admin ---- */
+    adminLogin: function (passcode) {
+      return rpc('admin_login', { p_passcode: passcode }).then(function (rows) {
+        var s = Array.isArray(rows) ? rows[0] : rows;
+        if (!s || !s.token) throw new Error('Invalid passcode');
+        saveAdmin(s); return s;
+      });
+    },
+    adminSession: loadAdmin,
+    adminLogout: function () { try { sessionStorage.removeItem(AKEY); } catch (e) {} },
+
+    listPhotos: function (season) { return rpc('list_photos', { p_season: season || null }); },
+    savePhoto: function (p) {
+      return rpc('admin_save_photo', { p_token: adminToken(), p_id: p.id || null, p_url: p.url,
+        p_caption: p.caption || null, p_season: p.season_id || null,
+        p_sort: p.sort_order || 0, p_wide: !!p.is_wide });
+    },
+    deletePhoto: function (id) { return rpc('admin_delete_photo', { p_token: adminToken(), p_id: id }); },
+
+    listChampions: function () { return rpc('list_champions', {}); },
+    saveChampion: function (c) {
+      return rpc('admin_save_champion', { p_token: adminToken(), p_id: c.id || null,
+        p_label: c.label, p_league: c.league || null, p_team: c.team_name || null,
+        p_photo: c.photo_url || null, p_caption: c.caption || null });
+    },
+    deleteChampion: function (id) { return rpc('admin_delete_champion', { p_token: adminToken(), p_id: id }); },
+
+    listSeasons: function () { return rpc('list_seasons', {}); },
+    newSeason: function (o) {
+      return rpc('admin_new_season', { p_token: adminToken(), p_id: o.id, p_label: o.label,
+        p_starts: o.starts_on || null, p_copy_teams: o.copy_teams !== false,
+        p_make_current: o.make_current !== false });
+    },
+    setCurrentSeason: function (id) { return rpc('admin_set_current_season', { p_token: adminToken(), p_id: id }); },
+    setTeamPasscode: function (teamId, code) {
+      return rpc('admin_set_team_passcode', { p_token: adminToken(), p_team_id: teamId, p_passcode: code });
+    },
+
+    /* Upload straight to Supabase Storage, bucket "photos". Returns a public URL. */
+    uploadPhoto: function (file) {
+      if (!configured()) return Promise.reject(new Error('NOT_CONFIGURED'));
+      adminToken();
+      var safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+      var path = Date.now() + '-' + safe;
+      var base = cfg.SUPABASE_URL.replace(/\/$/, '');
+      return fetch(base + '/storage/v1/object/photos/' + encodeURIComponent(path), {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+          'Content-Type': file.type || 'application/octet-stream',
+          'x-upsert': 'true'
+        },
+        body: file
+      }).then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error('Upload failed: ' + t); });
+        return base + '/storage/v1/object/public/photos/' + encodeURIComponent(path);
+      });
+    },
+
     registerPlayer: function (data, waiverText) {
       return sha256Hex(waiverText).then(function (hash) {
         return rpc('register_player', {
@@ -86,7 +156,8 @@
           p_full_name: data.fullName, p_email: data.email, p_phone: data.phone || null,
           p_team_id: data.teamId || null,
           p_waiver_version: cfg.WAIVER_VERSION, p_signed_name: data.signedName,
-          p_agreed_hash: hash, p_user_agent: navigator.userAgent
+          p_agreed_hash: hash, p_user_agent: navigator.userAgent,
+          p_signature_image: data.signatureImage || null
         });
       });
     }

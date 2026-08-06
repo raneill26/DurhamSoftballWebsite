@@ -18,7 +18,7 @@
   <div class="wrap">
     <div class="crumb">2026 Summer season</div>
     <h1 class="h-lg">Teams &amp; partners</h1>
-    <p>Twenty teams, twenty Durham causes. Click any team for their full schedule and who they play for.</p>
+    <p>Every organisation the league supports. Twenty are fielding a team this season, the rest are partners between teams.</p>
   </div>
 </div>
 <main class="section">
@@ -28,13 +28,16 @@
         <button role="tab" aria-selected="true" data-league="all">All</button>
         <button role="tab" aria-selected="false" data-league="A">A League</button>
         <button role="tab" aria-selected="false" data-league="B">B League</button>
+        <button role="tab" aria-selected="false" data-league="partner">No team this season</button>
       </div>
       <span class="spacer"></span>
       <input class="field" type="search" placeholder="Search partners…" data-search>
     </div>
+    <p class="muted" id="org-count" style="margin:-10px 0 18px;font-size:.9rem"></p>
     <div class="grid grid-4" id="teams-out"></div>
     <p class="muted center" style="margin-top:38px">
-      Interested in bringing your non-profit into the league?
+      Partners without a team this season are still part of the league and can field one again any time.<br>
+      Interested in bringing your non-profit in?
       <a href="mailto:playncinc@gmail.com" style="color:var(--clay)">Email us</a>.
     </p>
   </div>
@@ -45,20 +48,38 @@
 <script>
 (function(){
   var state={league:'all',q:''};
+
+  function tagFor(o){
+    if(o.status==='A'||o.status==='B') return '<span class="pill pill-league">'+o.status+' League</span>';
+    if(o.status==='partner') return '<span class="pill pill-partner">No team this season</span>';
+    return '<span class="pill pill-former">Past partner</span>';
+  }
+
   function render(){
-    var list=DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).filter(function(t){
-      if(state.league!=='all'&&t.league!==state.league) return false;
-      if(state.q&&(t.name+' '+t.cause).toLowerCase().indexOf(state.q)===-1) return false;
+    var list=DS.allOrgs().sort(function(a,b){return a.name.localeCompare(b.name);}).filter(function(o){
+      if(state.league==='A'||state.league==='B') { if(o.status!==state.league) return false; }
+      else if(state.league==='partner') { if(o.status!=='partner'&&o.status!=='former') return false; }
+      if(state.q&&(o.name+' '+o.cause).toLowerCase().indexOf(state.q)===-1) return false;
       return true;
     });
-    document.getElementById('teams-out').innerHTML = list.length ? list.map(function(t){
-      return '<a class="team-tile" href="team.html?id='+t.id+'">'+
-        '<img src="'+t.logo+'" alt="" loading="lazy">'+
-        '<div><div class="name">'+DSUI.esc(t.name)+'</div>'+
-        '<div class="meta">'+DSUI.esc(t.cause)+'</div></div>'+
-        '<span class="pill pill-league">'+t.league+' League</span></a>';
-    }).join('') : '<p class="center muted" style="grid-column:1/-1;padding:60px 0">No partners match that search.</p>';
+
+    document.getElementById('teams-out').innerHTML = list.length ? list.map(function(o){
+      var href = o.isTeam ? 'team.html?id='+o.id : o.url;
+      var ext  = o.isTeam ? '' : ' target="_blank" rel="noopener"';
+      var img  = o.logo
+        ? '<img src="'+o.logo+'" alt="" loading="lazy">'
+        : '<div class="logo-fallback">'+DSUI.esc(o.name.charAt(0))+'</div>';
+      return '<a class="team-tile'+(o.isTeam?'':' is-noteam')+'" href="'+href+'"'+ext+'>'+
+        img+
+        '<div><div class="name">'+DSUI.esc(o.name)+'</div>'+
+        '<div class="meta">'+DSUI.esc(o.cause)+'</div></div>'+
+        tagFor(o)+'</a>';
+    }).join('') : '<p class="center muted" style="grid-column:1/-1;padding:60px 0">Nothing matches that search.</p>';
+
+    document.getElementById('org-count').textContent =
+      list.length+' of '+DS.allOrgs().length+' organisations';
   }
+
   document.querySelectorAll('[data-league]').forEach(function(b){
     b.addEventListener('click',function(){
       document.querySelectorAll('[data-league]').forEach(function(o){o.setAttribute('aria-selected','false');});

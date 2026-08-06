@@ -23,24 +23,18 @@ reviewed. Two things specifically:
   that. Both assume every player is an adult. This one asks the signer to confirm they are 18+.
 - How long signed waivers must be kept, and who is allowed to see them.
 
-### Keeping Jotform, or replacing it
+### Jotform is now fully replaced
 
-You can do either.
+`register.html` does everything the Jotform did and a bit more:
 
-**Replace it** (what is built now): registration, waiver, and team assignment happen in one step,
-and waiver status flows straight into the attendance screen so captains see who has not signed. One
-database, no per-signature cost.
+- All six waiver statements, verbatim, each its own required checkbox
+- **Drawn signature** on a canvas pad, finger or mouse, saved as an image with the waiver
+- Typed signature as an alternative, and the only option if a browser has no canvas support
+- Team assignment, restricted to teams actually fielding this season
+- Waiver status flows into the attendance screen, so captains see who has not signed
 
-**Keep Jotform**: no migration, and it captures a drawn signature rather than a typed one, which is
-slightly stronger evidence. The catch is that attendance would not know who has signed unless we
-wire a Jotform webhook into the database. That is a Netlify Function and maybe an hour of work.
-
-### One thing to fix on the Jotform either way
-
-Its team dropdown is out of date. It still lists six organisations that are not in the 2026 season:
-Crayons2Calculators, Durham Bulls Youth Athletic League, Families Moving Forward, Play NC,
-Preservation Durham, and SwingPals. It is also titled "2025 Durham Softball Player Liability Waiver"
-while the body says 2026.
+Once this is live you can retire the Jotform. Keep the existing submissions somewhere safe as your
+record for prior seasons.
 
 ---
 
@@ -107,16 +101,48 @@ at the field.
 
 ---
 
-## 5. Things to decide before launch
+## 5. The admin page
 
-- **Assigning players to teams.** `register_player()` creates the player but leaves `team_id` null,
-  because you balance teams by hand. Set it in the Supabase table editor, or tell me and I'll build
-  a small admin page.
+`admin.html` lets the owner run the league without touching code. Set the passcode once from the
+SQL editor:
+
+```sql
+select set_admin_passcode('something-long-and-not-guessable');
+```
+
+Then sign in at `/admin.html`. Four tabs:
+
+- **Photos** - drag and drop to upload, edit captions, tag a season, delete. Uploaded photos appear
+  on the Photos page automatically.
+- **Champions** - record a season, winning team, and check photo. Appears on the Champions page.
+- **Seasons** - start a new season, optionally carrying the current charities across as teams, and
+  make it live. This is the season rollover.
+- **Passcodes** - set or rotate each team's captain passcode.
+
+### Storage bucket for photos
+
+Before uploads work: **Dashboard > Storage > New bucket**, name it `photos`, tick **Public**. Then
+run the commented storage policies at the bottom of `schema.sql`.
+
+### How the site picks its data
+
+Photos and champions read from the database when one is connected, and fall back to the built-in
+lists in `data.js` when it is not. So the site never breaks, it just shows less.
+
+The **schedule, standings, and teams still come from `data.js`.** Those are the pieces the admin
+page does not yet cover. Fixtures and scores are a bigger build; say the word and it is the natural
+next step.
+
+## 6. Things to decide before launch
+
+- **Assigning players to teams.** Players now pick their team when they register. If you move
+  someone, change it in the Supabase table editor.
 - **Data retention.** Decide how long you keep waivers and attendance, and write it down. You are
   holding names, emails, and phone numbers for 350+ people.
 - **Who can see the database.** Supabase access is per-account. Keep the number of people with
   dashboard access small.
-- **Passcode rotation.** Shared codes leak. Rotate every season with `set_team_passcode()`.
+- **Passcode rotation.** Shared codes leak. Rotate every season from the admin Passcodes tab.
+- **Guard the admin passcode.** It is the only thing protecting photo uploads and season changes.
 
 ### What shared passcodes are and are not
 

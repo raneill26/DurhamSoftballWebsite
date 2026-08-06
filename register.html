@@ -73,9 +73,34 @@
       </div>
 
       <div class="field-row">
-        <label for="signedName">Type your full name to sign</label>
-        <input type="text" id="signedName" class="sig-input" autocomplete="off" required>
-        <div class="hint" id="sig-date"></div>
+        <label>Signature</label>
+        <div class="sig-tabs" role="tablist">
+          <button type="button" role="tab" data-sig="draw" aria-selected="true">Draw</button>
+          <button type="button" role="tab" data-sig="type" aria-selected="false">Type</button>
+        </div>
+
+        <div data-sig-panel="draw">
+          <div class="sig-pad-wrap">
+            <canvas class="sig-pad" id="sig-pad"></canvas>
+            <div class="sig-baseline"></div>
+            <div class="sig-hint" id="sig-hint">Sign here with your finger or mouse</div>
+          </div>
+          <div class="sig-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="sig-clear">Clear</button>
+            <span class="hint" style="margin:0">Your drawn signature is saved with the waiver.</span>
+          </div>
+        </div>
+
+        <div data-sig-panel="type" class="hide">
+          <input type="text" id="signedNameTyped" class="sig-input" autocomplete="off"
+                 placeholder="Type your full name" style="width:100%">
+        </div>
+
+        <div class="field-row" style="margin-top:16px;margin-bottom:0">
+          <label for="signedName">Confirm your full name</label>
+          <input type="text" id="signedName" autocomplete="off" required>
+          <div class="hint" id="sig-date"></div>
+        </div>
       </div>
 
       <button class="btn btn-primary btn-lg" type="submit" style="width:100%" id="submit-btn">
@@ -124,6 +149,69 @@
     DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
       .map(function(t){return '<option value="'+t.id+'">'+DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('');
 
+  /* ---------------- signature pad ---------------- */
+  var pad=document.getElementById('sig-pad');
+  var ctx=pad && pad.getContext ? pad.getContext('2d') : null;
+  var drawing=false, hasInk=false, last=null;
+
+  // No canvas support: hide the draw option and fall back to typing.
+  if(!ctx){
+    document.querySelector('[data-sig-panel="draw"]').classList.add('hide');
+    document.querySelector('[data-sig="draw"]').classList.add('hide');
+    document.querySelector('[data-sig="type"]').setAttribute('aria-selected','true');
+    document.querySelector('[data-sig-panel="type"]').classList.remove('hide');
+  }
+
+  function sizePad(){
+    if(!ctx) return;
+    var ratio=window.devicePixelRatio||1;
+    var w=pad.clientWidth, h=pad.clientHeight;
+    var prev = hasInk ? pad.toDataURL() : null;
+    pad.width=w*ratio; pad.height=h*ratio;
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#16212B';
+    if(prev){ var img=new Image(); img.onload=function(){ctx.drawImage(img,0,0,w,h);}; img.src=prev; }
+  }
+  function pos(e){
+    var r=pad.getBoundingClientRect();
+    var p=e.touches?e.touches[0]:e;
+    return {x:p.clientX-r.left, y:p.clientY-r.top};
+  }
+  function start(e){ if(!ctx) return; e.preventDefault(); drawing=true; last=pos(e); }
+  function move(e){
+    if(!drawing||!ctx) return; e.preventDefault();
+    var p=pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+    last=p;
+    if(!hasInk){ hasInk=true; document.getElementById('sig-hint').style.display='none'; }
+  }
+  function end(){ drawing=false; }
+
+  ['mousedown','touchstart'].forEach(function(ev){pad.addEventListener(ev,start,{passive:false});});
+  ['mousemove','touchmove'].forEach(function(ev){pad.addEventListener(ev,move,{passive:false});});
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){pad.addEventListener(ev,end);});
+
+  document.getElementById('sig-clear').addEventListener('click',function(){
+    if(ctx) ctx.clearRect(0,0,pad.width,pad.height);
+    hasInk=false;
+    document.getElementById('sig-hint').style.display='';
+  });
+  window.addEventListener('resize',sizePad);
+  sizePad();
+
+  var sigMode = ctx ? 'draw' : 'type';
+  document.querySelectorAll('[data-sig]').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('[data-sig]').forEach(function(o){o.setAttribute('aria-selected','false');});
+      b.setAttribute('aria-selected','true');
+      sigMode=b.getAttribute('data-sig');
+      document.querySelectorAll('[data-sig-panel]').forEach(function(p){
+        p.classList.toggle('hide', p.getAttribute('data-sig-panel')!==sigMode);
+      });
+      if(sigMode==='draw') sizePad();
+    });
+  });
+
   document.getElementById('sig-date').textContent =
     'Signing as of ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
@@ -144,8 +232,19 @@
       email:document.getElementById('email').value.trim(),
       phone:document.getElementById('phone').value.trim(),
       signedName:document.getElementById('signedName').value.trim(),
-      teamId:document.getElementById('teamId').value||null
+      teamId:document.getElementById('teamId').value||null,
+      signatureImage:null
     };
+
+    if(sigMode==='draw'){
+      if(!hasInk) return show('err','Please draw your signature, or switch to Type.');
+      data.signatureImage=pad.toDataURL('image/png');
+    } else {
+      var typed=document.getElementById('signedNameTyped').value.trim();
+      if(typed.length<2) return show('err','Type your full name to sign, or switch to Draw.');
+      if(typed.replace(/\s+/g,' ').toLowerCase()!==data.signedName.replace(/\s+/g,' ').toLowerCase())
+        return show('err','Your typed signature must match the name you confirmed below it.');
+    }
     if(data.fullName.length<2) return show('err','Please enter your full name.');
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) return show('err','Please enter a valid email address.');
     var unchecked=[].slice.call(document.querySelectorAll('[data-clause]')).filter(function(c){return !c.checked;});
@@ -153,9 +252,9 @@
       unchecked.length+' still unchecked.');
     if(!document.getElementById('agree18').checked)
       return show('err','You must confirm you are 18 or older and signing for yourself.');
-    if(data.signedName.length<2) return show('err','Type your name to sign the waiver.');
+    if(data.signedName.length<2) return show('err','Confirm your full name under the signature.');
     if(data.signedName.replace(/\s+/g,' ').toLowerCase()!==data.fullName.replace(/\s+/g,' ').toLowerCase())
-      return show('err','Your signature must match the full name you entered above.');
+      return show('err','The name under your signature must match the full name you entered above.');
 
     var btn=document.getElementById('submit-btn');
     btn.disabled=true; btn.textContent='Saving…';
