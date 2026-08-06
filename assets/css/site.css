@@ -137,8 +137,8 @@ p:last-child{margin-bottom:0}
 .brand-tag{font-family:var(--display);font-size:.67rem;font-weight:600;color:var(--gold);letter-spacing:.22em;text-transform:uppercase;margin-top:3px}
 
 .nav{display:none;margin-left:auto;align-items:center;gap:2px}
-.nav a,.nav-item > button{font-family:var(--display);font-size:1.03rem;font-weight:600;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--on-dark-soft);padding:9px 13px;border-radius:var(--r-sm);
+.nav a,.nav-item > button{font-family:var(--display);font-size:1.03rem;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--on-dark-soft);padding:9px 10px;border-radius:var(--r-sm);
   transition:color .15s,background .15s;white-space:nowrap}
 .nav a:hover,.nav-item > button:hover{color:#fff;background:rgba(255,255,255,.08)}
 .nav a[aria-current="page"]{color:var(--gold)}
@@ -167,7 +167,7 @@ p:last-child{margin-bottom:0}
 .mobile-nav a[aria-current="page"]{color:var(--gold)}
 .mobile-nav .btn{margin-top:18px;width:100%}
 
-@media(min-width:1040px){
+@media(min-width:1180px){
   .nav{display:flex}
   .burger{display:none}
   .mobile-nav{display:none !important}
@@ -322,12 +322,15 @@ a.gc-team-name:hover{color:var(--clay)}
 .sc-logo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--line);flex-shrink:0}
 
 /* ---------- Team tiles ---------- */
-.team-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:13px;padding:24px 16px;
-  background:#fff;border:1px solid var(--line);border-radius:var(--r);transition:box-shadow .18s,border-color .18s}
+.team-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:0;padding:24px 16px 20px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);height:100%;
+  transition:box-shadow .18s,border-color .18s}
+.team-tile .tile-body{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:8px;margin:14px 0 16px}
+.team-tile .tile-tag{margin-top:auto}
 .team-tile:hover{box-shadow:var(--shadow);border-color:var(--line-2)}
 .team-tile img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:var(--paper)}
 .team-tile .name{font-family:var(--display);font-size:1.03rem;font-weight:700;text-transform:uppercase;line-height:1.2;color:var(--text)}
-.team-tile .meta{font-size:.79rem;color:var(--text-mute);margin-top:6px}
+.team-tile .meta{font-size:.79rem;color:var(--text-mute);margin:0}
 
 /* ---------- Photos ---------- */
 .photo-band{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
@@ -490,9 +493,8 @@ a.gc-team-name:hover{color:var(--clay)}
 .waiver-box select,.field-row select{font-family:var(--body)}
 
 /* Org status tags on the charities page */
-.pill-partner{background:var(--gold-soft);color:#7A5A12;border:1px solid #E8D7AE}
-.pill-former{background:var(--paper);color:var(--text-mute);border:1px solid var(--line-2)}
-.team-tile.is-noteam img{filter:grayscale(.35);opacity:.9}
+.pill-partner{background:#fff;color:var(--text-mute);border:1px solid var(--line-2)}
+.pill-former{background:#fff;color:var(--text-mute);border:1px solid var(--line-2)}
 .logo-fallback{width:88px;height:88px;border-radius:50%;background:var(--paper);border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:1.6rem;
   font-weight:700;color:var(--text-mute)}

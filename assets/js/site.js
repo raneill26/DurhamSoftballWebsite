@@ -25,7 +25,7 @@
   var NAV = [
     { label:'Schedule',  href:'schedule.html' },
     { label:'Standings', href:'standings.html' },
-    { label:'Teams',     href:'teams.html' },
+    { label:'Non-Profit Partners', href:'teams.html' },
     { label:'Photos',    href:'photos.html' },
     { label:'Register',  href:'register.html' },
     { label:'League Info', children:[
@@ -115,7 +115,7 @@
           '<div><h4>The league</h4><ul>'+
             '<li><a href="schedule.html">Schedule</a></li>'+
             '<li><a href="standings.html">Standings</a></li>'+
-            '<li><a href="teams.html">Teams &amp; partners</a></li>'+
+            '<li><a href="teams.html">Non-profit partners</a></li>'+
             '<li><a href="photos.html">Photos</a></li>'+
             '<li><a href="champions.html">Champions</a></li>'+
             '<li><a href="rules.html">Rules</a></li>'+
