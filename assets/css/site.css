@@ -486,3 +486,5 @@ a.gc-team-name:hover{color:var(--clay)}
 .att-btns button[aria-pressed="true"][data-s="in"]{background:var(--win);color:#fff}
 .att-btns button[aria-pressed="true"][data-s="out"]{background:var(--loss);color:#fff}
 .att-btns button[aria-pressed="true"][data-s="maybe"]{background:var(--text-mute);color:#fff}
+.waiver-box .clause-n{font-family:var(--display);font-weight:700;color:var(--clay);margin-right:4px}
+.waiver-box select,.field-row select{font-family:var(--body)}

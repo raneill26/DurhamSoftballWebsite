@@ -84,6 +84,7 @@
         return rpc('register_player', {
           p_season: cfg.CURRENT_SEASON,
           p_full_name: data.fullName, p_email: data.email, p_phone: data.phone || null,
+          p_team_id: data.teamId || null,
           p_waiver_version: cfg.WAIVER_VERSION, p_signed_name: data.signedName,
           p_agreed_hash: hash, p_user_agent: navigator.userAgent
         });

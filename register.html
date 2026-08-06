@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Register and sign the waiver | Durham Softball</title>
-<meta name="description" content="Sign up for the Durham Softball season, sign the required waiver, and pay your registration fee.">
+<meta name="description" content="Register for the Durham Softball season, complete the required player liability waiver, and pay your fee.">
 <link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
   <div class="wrap">
     <div class="crumb">Play this season</div>
     <h1 class="h-lg">Register</h1>
-    <p>Every player signs the waiver before taking the field. It takes about two minutes.</p>
+    <p>Every player completes the liability waiver for 2026, even if you played in 2025.</p>
   </div>
 </div>
 
@@ -51,16 +51,24 @@
         <input type="tel" id="phone" name="phone" autocomplete="tel">
         <div class="hint">Only used for same-day rainout texts.</div>
       </div>
+      <div class="field-row">
+        <label for="teamId">2026 team assignment</label>
+        <select class="field" id="teamId" style="width:100%" required></select>
+        <div class="hint">If you have not been placed on a team yet, choose Not assigned yet and the league will slot you in.</div>
+      </div>
 
       <h2 class="h-sm" style="margin:30px 0 14px">Liability waiver</h2>
+      <p class="muted" style="font-size:.9rem;margin-bottom:12px">
+        Each statement below must be agreed to separately, the same as on the league's paper form.
+      </p>
       <div class="waiver-box" id="waiver-text" tabindex="0"></div>
+      <div id="clause-checks"></div>
 
       <div class="check-row">
-        <input type="checkbox" id="agree" required>
-        <label for="agree">
-          I have read the waiver above in full, I am 18 or older, and I agree to it on my own behalf.
-          I understand that typing my name below is my electronic signature and is intended to have the
-          same effect as signing on paper.
+        <input type="checkbox" id="agree18" required>
+        <label for="agree18">
+          I am 18 years of age or older and am signing on my own behalf. I understand that typing my
+          name below is my electronic signature and is intended to have the same effect as signing on paper.
         </label>
       </div>
 
@@ -103,6 +111,19 @@
   var box=document.getElementById('waiver-text');
   box.innerHTML = DS_WAIVER.html;
 
+  // one required checkbox per clause, mirroring the league's own form
+  document.getElementById('clause-checks').innerHTML = DS_WAIVER.clauses.map(function(c,i){
+    return '<div class="check-row">'+
+      '<input type="checkbox" id="c'+i+'" data-clause required>'+
+      '<label for="c'+i+'">I have read and agree to statement '+(i+1)+'.</label></div>';
+  }).join('');
+
+  // team dropdown from the live 2026 roster
+  var teamSel=document.getElementById('teamId');
+  teamSel.innerHTML='<option value="">Not assigned yet</option>'+
+    DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+      .map(function(t){return '<option value="'+t.id+'">'+DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('');
+
   document.getElementById('sig-date').textContent =
     'Signing as of ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
@@ -122,11 +143,16 @@
       fullName:document.getElementById('fullName').value.trim(),
       email:document.getElementById('email').value.trim(),
       phone:document.getElementById('phone').value.trim(),
-      signedName:document.getElementById('signedName').value.trim()
+      signedName:document.getElementById('signedName').value.trim(),
+      teamId:document.getElementById('teamId').value||null
     };
     if(data.fullName.length<2) return show('err','Please enter your full name.');
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) return show('err','Please enter a valid email address.');
-    if(!document.getElementById('agree').checked) return show('err','You must agree to the waiver to play.');
+    var unchecked=[].slice.call(document.querySelectorAll('[data-clause]')).filter(function(c){return !c.checked;});
+    if(unchecked.length) return show('err','You must agree to every statement in the waiver. '+
+      unchecked.length+' still unchecked.');
+    if(!document.getElementById('agree18').checked)
+      return show('err','You must confirm you are 18 or older and signing for yourself.');
     if(data.signedName.length<2) return show('err','Type your name to sign the waiver.');
     if(data.signedName.replace(/\s+/g,' ').toLowerCase()!==data.fullName.replace(/\s+/g,' ').toLowerCase())
       return show('err','Your signature must match the full name you entered above.');

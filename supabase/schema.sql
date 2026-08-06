@@ -161,7 +161,7 @@ end; $$;
 
 -- ---------------------------------------------------------------- registration
 create or replace function register_player(
-  p_season text, p_full_name text, p_email text, p_phone text,
+  p_season text, p_full_name text, p_email text, p_phone text, p_team_id text,
   p_waiver_version text, p_signed_name text, p_agreed_hash text, p_user_agent text)
 returns uuid language plpgsql security definer set search_path = public as $$
 declare v_player uuid;
@@ -170,9 +170,15 @@ begin
   if p_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'valid email required'; end if;
   if length(trim(p_signed_name)) < 2 then raise exception 'signature required'; end if;
 
-  insert into players (full_name, email, phone, season_id)
-  values (trim(p_full_name), lower(trim(p_email)), p_phone, p_season)
-  on conflict (email, season_id) do update set full_name = excluded.full_name, phone = excluded.phone
+  if p_team_id is not null and not exists (
+       select 1 from teams where id = p_team_id and season_id = p_season) then
+    raise exception 'unknown team for this season';
+  end if;
+
+  insert into players (full_name, email, phone, team_id, season_id)
+  values (trim(p_full_name), lower(trim(p_email)), p_phone, p_team_id, p_season)
+  on conflict (email, season_id) do update
+    set full_name = excluded.full_name, phone = excluded.phone, team_id = excluded.team_id
   returning id into v_player;
 
   insert into waivers (player_id, season_id, waiver_version, signed_name, agreed_text_hash, user_agent)
@@ -192,7 +198,7 @@ grant execute on function public_teams(text)         to anon;
 grant execute on function team_login(text, text)     to anon;
 grant execute on function team_roster(uuid, integer) to anon;
 grant execute on function mark_attendance(uuid, integer, uuid, text, text) to anon;
-grant execute on function register_player(text, text, text, text, text, text, text, text) to anon;
+grant execute on function register_player(text, text, text, text, text, text, text, text, text) to anon;
 revoke execute on function session_team(uuid) from anon;
 
 -- ---------------------------------------------------------------- admin only

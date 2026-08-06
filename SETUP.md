@@ -5,23 +5,42 @@ The site runs fine with none of this done. Registration, the waiver, and attenda
 
 ---
 
-## Before anything else: the waiver needs a lawyer
+## The waiver
 
-`assets/js/waiver.js` contains a **draft** waiver. I assembled it from the league's own Rules page
-plus the sections a release like this normally has. **It has not been reviewed by an attorney and
-it is not legal advice.**
+`assets/js/waiver.js` now holds the league's **real** waiver text, transcribed verbatim from the
+Jotform already in use (form `210598080020042`). All six statements are reproduced word for word,
+and each is a separate required checkbox, matching the paper form.
 
-Have a North Carolina attorney review it before you collect a single real signature. Worth raising
-with them:
+Do not reword it casually. The site hashes this exact text at signing time and stores the hash, so
+you can prove precisely what any given player agreed to. Changing one character changes the hash.
+If the wording is updated, change it in both places and bump `WAIVER_VERSION` in
+`assets/js/config.js`.
 
-- North Carolina law on enforceability of pre-injury liability releases
-- Whether Play NC's insurance carrier requires particular wording
-- **Anyone under 18 needs a parent or guardian to sign.** The current form assumes every player is
-  18+ and asks them to confirm it. If you ever allow minors, that flow has to be built separately
-- How long signed waivers must be kept, and who is allowed to see them
+**Still worth a lawyer's eye.** Text that has been in use is not the same as text that has been
+reviewed. Two things specifically:
 
-When the wording changes, bump `WAIVER_VERSION` in `assets/js/config.js` so old and new signatures
-stay distinguishable in the database.
+- **Anyone under 18 needs a parent or guardian to sign.** Neither the Jotform nor this form handles
+  that. Both assume every player is an adult. This one asks the signer to confirm they are 18+.
+- How long signed waivers must be kept, and who is allowed to see them.
+
+### Keeping Jotform, or replacing it
+
+You can do either.
+
+**Replace it** (what is built now): registration, waiver, and team assignment happen in one step,
+and waiver status flows straight into the attendance screen so captains see who has not signed. One
+database, no per-signature cost.
+
+**Keep Jotform**: no migration, and it captures a drawn signature rather than a typed one, which is
+slightly stronger evidence. The catch is that attendance would not know who has signed unless we
+wire a Jotform webhook into the database. That is a Netlify Function and maybe an hour of work.
+
+### One thing to fix on the Jotform either way
+
+Its team dropdown is out of date. It still lists six organisations that are not in the 2026 season:
+Crayons2Calculators, Durham Bulls Youth Athletic League, Families Moving Forward, Play NC,
+Preservation Durham, and SwingPals. It is also titled "2025 Durham Softball Player Liability Waiver"
+while the body says 2026.
 
 ---
 
