@@ -27,6 +27,7 @@
     { label:'Standings', href:'standings.html' },
     { label:'Teams',     href:'teams.html' },
     { label:'Photos',    href:'photos.html' },
+    { label:'Register',  href:'register.html' },
     { label:'League Info', children:[
       { label:'About us',      href:'about.html' },
       { label:'Rules',         href:'rules.html' },
@@ -117,7 +118,8 @@
             '<li><a href="teams.html">Teams &amp; partners</a></li>'+
             '<li><a href="photos.html">Photos</a></li>'+
             '<li><a href="champions.html">Champions</a></li>'+
-            '<li><a href="rules.html">Rules</a></li></ul></div>'+
+            '<li><a href="rules.html">Rules</a></li>'+
+            '<li><a href="register.html">Register to play</a></li></ul></div>'+
           '<div><h4>About</h4><ul>'+
             '<li><a href="about.html">About Durham Softball</a></li>'+
             '<li><a href="donations.html">Donation pool</a></li>'+

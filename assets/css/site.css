@@ -444,3 +444,45 @@ a.gc-team-name:hover{color:var(--clay)}
 .champ-season{font-family:var(--display);font-size:1.3rem;font-weight:700;text-transform:uppercase;line-height:1.1}
 .champ-team{color:var(--text-soft);margin-top:6px;font-size:.95rem}
 .champ-empty{border:1px dashed var(--line-2);border-radius:var(--r);padding:34px 24px;text-align:center;background:#fff}
+
+/* ---------- Forms / registration ---------- */
+.form-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px;box-shadow:var(--shadow-sm)}
+.field-row{margin-bottom:18px}
+.field-row label{display:block;font-family:var(--display);font-size:.9rem;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--text-soft);margin-bottom:7px}
+.field-row input[type=text],.field-row input[type=email],.field-row input[type=tel]{
+  width:100%;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:12px 14px;font-size:1rem;
+  font-family:var(--body);color:var(--text);background:#fff}
+.field-row input:focus{outline:2px solid var(--clay);outline-offset:1px;border-color:var(--clay)}
+.field-row .hint{font-size:.82rem;color:var(--text-mute);margin-top:6px}
+.sig-input{font-family:var(--display) !important;font-size:1.4rem !important;letter-spacing:.02em}
+.check-row{display:flex;gap:11px;align-items:flex-start;margin:18px 0}
+.check-row input{margin-top:4px;width:18px;height:18px;flex-shrink:0;accent-color:var(--clay)}
+.check-row label{font-size:.95rem;color:var(--text-soft);line-height:1.55;font-family:var(--body);
+  text-transform:none;letter-spacing:0;font-weight:400;margin:0}
+.waiver-box{border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--paper);
+  padding:20px 22px;max-height:340px;overflow-y:auto;font-size:.92rem;line-height:1.7;color:var(--text-soft)}
+.waiver-box h3{font-size:1.05rem;text-transform:uppercase;color:var(--text);margin:20px 0 8px}
+.waiver-box h3:first-child{margin-top:0}
+.waiver-box p{margin-bottom:12px}
+.steps{display:flex;gap:0;margin-bottom:30px;flex-wrap:wrap}
+.step{flex:1;min-width:120px;padding:12px 14px;border-top:3px solid var(--line);
+  font-family:var(--display);font-size:.88rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mute)}
+.step[data-on="true"]{border-top-color:var(--clay);color:var(--text)}
+.form-msg{border-radius:var(--r-sm);padding:13px 16px;font-size:.93rem;margin-bottom:18px}
+.form-msg.err{background:var(--loss-soft);color:var(--loss);border:1px solid #E8C9C5}
+.form-msg.ok{background:var(--win-soft);color:var(--win);border:1px solid #C2DED1}
+.form-msg.warn{background:var(--gold-soft);color:#7A5A12;border:1px solid #E8D7AE}
+
+/* ---------- Attendance ---------- */
+.att-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;
+  padding:13px 16px;border-bottom:1px solid var(--line)}
+.att-row:last-child{border-bottom:0}
+.att-name{font-family:var(--display);font-size:1.05rem;font-weight:700;text-transform:uppercase;line-height:1.2}
+.att-warn{font-size:.78rem;color:var(--loss);margin-top:3px}
+.att-btns{display:inline-flex;border:1px solid var(--line-2);border-radius:100px;padding:3px;background:#fff}
+.att-btns button{border:0;background:transparent;border-radius:100px;padding:6px 14px;
+  font-family:var(--display);font-size:.85rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mute)}
+.att-btns button[aria-pressed="true"][data-s="in"]{background:var(--win);color:#fff}
+.att-btns button[aria-pressed="true"][data-s="out"]{background:var(--loss);color:#fff}
+.att-btns button[aria-pressed="true"][data-s="maybe"]{background:var(--text-mute);color:#fff}

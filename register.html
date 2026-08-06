@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register and sign the waiver | Durham Softball</title>
+<meta name="description" content="Sign up for the Durham Softball season, sign the required waiver, and pay your registration fee.">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<div data-header="register.html"></div>
+
+<div class="page-head">
+  <img class="page-head-bg" src="https://durhamsoftball.com/wp-content/uploads/2024/01/Summer_08-04-768x857.jpg" alt="">
+  <div class="wrap">
+    <div class="crumb">Play this season</div>
+    <h1 class="h-lg">Register</h1>
+    <p>Every player signs the waiver before taking the field. It takes about two minutes.</p>
+  </div>
+</div>
+
+<main class="section">
+  <div class="wrap wrap-narrow">
+    <div class="steps">
+      <div class="step" data-on="true">1. Your details</div>
+      <div class="step" data-on="true">2. Waiver</div>
+      <div class="step" data-on="true">3. Payment</div>
+    </div>
+
+    <div id="config-warning"></div>
+
+    <form class="form-card" id="reg-form" novalidate>
+      <div id="msg"></div>
+
+      <h2 class="h-sm" style="margin-bottom:18px">Your details</h2>
+      <div class="field-row">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" name="fullName" autocomplete="name" required>
+      </div>
+      <div class="field-row">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" required>
+        <div class="hint">Used for schedule updates, rainouts, and your waiver receipt.</div>
+      </div>
+      <div class="field-row">
+        <label for="phone">Mobile number (optional)</label>
+        <input type="tel" id="phone" name="phone" autocomplete="tel">
+        <div class="hint">Only used for same-day rainout texts.</div>
+      </div>
+
+      <h2 class="h-sm" style="margin:30px 0 14px">Liability waiver</h2>
+      <div class="waiver-box" id="waiver-text" tabindex="0"></div>
+
+      <div class="check-row">
+        <input type="checkbox" id="agree" required>
+        <label for="agree">
+          I have read the waiver above in full, I am 18 or older, and I agree to it on my own behalf.
+          I understand that typing my name below is my electronic signature and is intended to have the
+          same effect as signing on paper.
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label for="signedName">Type your full name to sign</label>
+        <input type="text" id="signedName" class="sig-input" autocomplete="off" required>
+        <div class="hint" id="sig-date"></div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" type="submit" style="width:100%" id="submit-btn">
+        Sign waiver and continue
+      </button>
+      <p class="muted" style="font-size:.82rem;margin-top:14px;text-align:center">
+        We store your name, email, and the exact waiver text you agreed to. Nothing else, and nothing is shared.
+      </p>
+    </form>
+
+    <div class="form-card hide" id="done-card">
+      <div class="form-msg ok" id="done-msg"></div>
+      <h2 class="h-sm" style="margin-bottom:12px">Last step: registration fee</h2>
+      <p class="muted" style="font-size:.95rem;margin-bottom:20px" id="fee-copy"></p>
+      <div class="btn-row" id="pay-row"></div>
+      <p class="muted" style="font-size:.82rem;margin-top:18px">
+        Payment is handled by our processor. Card details never touch this site.
+      </p>
+    </div>
+  </div>
+</main>
+
+<div data-footer></div>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/waiver.js"></script>
+<script>
+(function(){
+  var form=document.getElementById('reg-form');
+  var msg=document.getElementById('msg');
+  var box=document.getElementById('waiver-text');
+  box.innerHTML = DS_WAIVER.html;
+
+  document.getElementById('sig-date').textContent =
+    'Signing as of ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+  if(!DSAPI.configured()){
+    document.getElementById('config-warning').innerHTML =
+      '<div class="form-msg warn"><strong>Not connected yet.</strong> '+
+      'This form is fully built but has no database behind it until Supabase is set up '+
+      '(see SETUP.md). Submitting will show you the flow without saving anything.</div>';
+  }
+
+  function show(kind,text){ msg.innerHTML='<div class="form-msg '+kind+'">'+text+'</div>'; }
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    msg.innerHTML='';
+    var data={
+      fullName:document.getElementById('fullName').value.trim(),
+      email:document.getElementById('email').value.trim(),
+      phone:document.getElementById('phone').value.trim(),
+      signedName:document.getElementById('signedName').value.trim()
+    };
+    if(data.fullName.length<2) return show('err','Please enter your full name.');
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) return show('err','Please enter a valid email address.');
+    if(!document.getElementById('agree').checked) return show('err','You must agree to the waiver to play.');
+    if(data.signedName.length<2) return show('err','Type your name to sign the waiver.');
+    if(data.signedName.replace(/\s+/g,' ').toLowerCase()!==data.fullName.replace(/\s+/g,' ').toLowerCase())
+      return show('err','Your signature must match the full name you entered above.');
+
+    var btn=document.getElementById('submit-btn');
+    btn.disabled=true; btn.textContent='Saving…';
+
+    function finish(saved){
+      form.classList.add('hide');
+      var done=document.getElementById('done-card');
+      done.classList.remove('hide');
+      document.getElementById('done-msg').innerHTML = saved
+        ? '<strong>Waiver signed.</strong> A copy of what you agreed to is on file.'
+        : '<strong>Demo only.</strong> Nothing was saved because the database is not connected yet.';
+      var fee=DS_CONFIG.REGISTRATION_FEE_URL;
+      document.getElementById('fee-copy').textContent = fee
+        ? 'Your spot is held once the fee is paid. Every dollar goes into the season donation pool.'
+        : 'No payment link is configured yet. Add REGISTRATION_FEE_URL in assets/js/config.js.';
+      document.getElementById('pay-row').innerHTML =
+        (fee?'<a class="btn btn-primary btn-lg" href="'+fee+'">Pay '+DSUI.esc(DS_CONFIG.REGISTRATION_FEE_LABEL)+'</a>':'')+
+        '<a class="btn btn-outline btn-lg" href="'+DS_CONFIG.DONATE_URL+'" target="_blank" rel="noopener">Add a donation</a>';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    if(!DSAPI.configured()){ setTimeout(function(){ finish(false); },400); return; }
+
+    DSAPI.registerPlayer(data, DS_WAIVER.text)
+      .then(function(){ finish(true); })
+      .catch(function(err){
+        btn.disabled=false; btn.textContent='Sign waiver and continue';
+        show('err','Could not save your registration: '+DSUI.esc(err.message));
+      });
+  });
+})();
+</script>
+</body>
+</html>
