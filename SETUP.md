@@ -149,3 +149,27 @@ next step.
 Good enough for attendance: low stakes, and captains change every season. **Not** suitable for
 anything sensitive. Do not put payment info, waiver PDFs, or personal data behind a shared code. If
 you ever need that, we move to real per-captain accounts.
+
+---
+
+## Deploy caching, and why assets are version-stamped
+
+The asset files keep the same names every deploy (`site.js`, `data.js`, `site.css`), so they must
+never be cached as immutable. An earlier `netlify.toml` cached `/assets/*` for a year, which meant
+HTML updated on deploy while the JavaScript stayed stale, and pages that called new functions came
+up blank.
+
+Two things prevent it now:
+
+1. `netlify.toml` sets `/assets/*` to `max-age=0, must-revalidate`. Browsers revalidate with an
+   ETag and get a cheap 304 when nothing changed.
+2. Every asset URL carries a `?v=` stamp, so a new deploy is a new URL regardless of caching.
+
+**When you edit `assets/js/data.js` or any other asset, bump that stamp.** From the repo root:
+
+```bash
+git rev-parse --short HEAD   # or any new value
+```
+
+then find-and-replace the old `?v=...` with the new one across the `.html` files. If you would
+rather not think about it, tell me and I will add a tiny script that does it on every commit.
