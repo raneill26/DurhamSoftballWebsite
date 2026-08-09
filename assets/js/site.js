@@ -26,6 +26,7 @@
     { label:'Schedule',  href:'schedule.html' },
     { label:'Standings', href:'standings.html' },
     { label:'Non-Profit Partners', href:'teams.html' },
+    { label:'Current Teams', href:'current-teams.html' },
     { label:'Photos',    href:'photos.html' },
     { label:'Register',  href:'register.html' },
     { label:'League Info', children:[
@@ -116,6 +117,7 @@
             '<li><a href="schedule.html">Schedule</a></li>'+
             '<li><a href="standings.html">Standings</a></li>'+
             '<li><a href="teams.html">Non-profit partners</a></li>'+
+            '<li><a href="current-teams.html">Current teams</a></li>'+
             '<li><a href="photos.html">Photos</a></li>'+
             '<li><a href="champions.html">Champions</a></li>'+
             '<li><a href="rules.html">Rules</a></li>'+
@@ -205,6 +207,8 @@
     var sk=opts.sortKey||'pct', sd=opts.sortDir||'desc';
     var sorted=sortRows(rows,sk,sd);
     var played=sorted.some(function(r){return r.gp>0;});
+    var lg=rows.length?rows[0].team.league:null;
+    var cut=(opts.cut!=null)?opts.cut:((DS.PLAYOFF_CUT&&DS.PLAYOFF_CUT[lg])||0);
     var head=[{k:'pos',t:'#',cls:'col-pos',s:false},{k:'team',t:'Team',cls:'col-team'},{k:'gp',t:'GP',s:false},
       {k:'w',t:'W'},{k:'l',t:'L'},{k:'t',t:'T',s:false},{k:'pct',t:'PCT'},{k:'rs',t:'RS'},{k:'ra',t:'RA'},
       {k:'diff',t:'Diff'},{k:'strk',t:'Strk',s:false},{k:'l5',t:'Last 5',s:false}]
@@ -215,9 +219,9 @@
       }).join('');
 
     var body=sorted.map(function(r,i){
-      var pc=played?(i===0?'pos-1':(i<3?'pos-2':'')):'';
+      var pc=played?(i===0?'pos-1':(cut&&i<cut?'pos-2':'')):'';
       var dc=r.diff>0?'diff-pos':(r.diff<0?'diff-neg':'muted');
-      return '<tr'+(i===3?' class="cutline"':'')+'>'+
+      return '<tr'+(i===cut-1?' class="cutline"':'')+'>'+
         '<td class="col-pos"><span class="pos-badge '+pc+'">'+(i+1)+'</span></td>'+
         '<td class="col-team"><div class="team-cell"><img src="'+r.team.logo+'" alt="" loading="lazy">'+
           '<a class="tn" href="team.html?id='+r.team.id+'">'+esc(r.team.name)+'</a></div></td>'+
@@ -228,7 +232,7 @@
     }).join('');
 
     var cards=sorted.map(function(r,i){
-      var pc=played?(i===0?'pos-1':(i<3?'pos-2':'')):'';
+      var pc=played?(i===0?'pos-1':(cut&&i<cut?'pos-2':'')):'';
       var dc=r.diff>0?'diff-pos':(r.diff<0?'diff-neg':'muted');
       return '<a class="sc-row" href="team.html?id='+r.team.id+'">'+
         '<span class="pos-badge '+pc+'">'+(i+1)+'</span>'+
@@ -247,7 +251,7 @@
         '<span class="key"><strong>GP</strong> games played</span>'+
         '<span class="key"><strong>PCT</strong> win pct (ties = &frac12;)</span>'+
         '<span class="key"><strong>RS/RA</strong> runs scored / allowed</span>'+
-        '<span class="key">Dashed line = top-4 playoff cut</span>'+
+        '<span class="key">Dashed line = '+(cut?'top-'+cut+' advance to the tournament':'playoff cut')+'</span>'+
       '</div></div>';
   }
 

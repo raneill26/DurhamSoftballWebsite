@@ -1,5 +1,3 @@
--- Generated from assets/js/data.js. Safe to re-run.
-
 insert into seasons (id,label,starts_on,is_current) values
   ('2026-summer','2026 Summer','2026-08-16',true)
   on conflict (id) do update set label=excluded.label, is_current=excluded.is_current;
@@ -27,25 +25,24 @@ insert into teams (id,name,league,season_id) values
   ('v2v','Vets To Vets United','B','2026-summer')
   on conflict (id) do update set name=excluded.name, league=excluded.league;
 
--- Give every team a passcode. Change these before going live, then
--- hand each captain only their own code.
--- select set_team_passcode('alp416', 'CHANGE-ME');
--- select set_team_passcode('bike', 'CHANGE-ME');
--- select set_team_passcode('book', 'CHANGE-ME');
--- select set_team_passcode('bcll', 'CHANGE-ME');
--- select set_team_passcode('gotr', 'CHANGE-ME');
--- select set_team_passcode('hfnh', 'CHANGE-ME');
--- select set_team_passcode('kdb', 'CHANGE-ME');
--- select set_team_passcode('mow', 'CHANGE-ME');
--- select set_team_passcode('ncfff', 'CHANGE-ME');
--- select set_team_passcode('sdll', 'CHANGE-ME');
--- select set_team_passcode('aps', 'CHANGE-ME');
--- select set_team_passcode('bcw', 'CHANGE-ME');
--- select set_team_passcode('hope', 'CHANGE-ME');
--- select set_team_passcode('josh', 'CHANGE-ME');
--- select set_team_passcode('mlt', 'CHANGE-ME');
--- select set_team_passcode('nccadv', 'CHANGE-ME');
--- select set_team_passcode('porch', 'CHANGE-ME');
--- select set_team_passcode('spa', 'CHANGE-ME');
--- select set_team_passcode('umd', 'CHANGE-ME');
--- select set_team_passcode('v2v', 'CHANGE-ME');
+-- Change "CHANGE-ME" for each team password
+select set_team_passcode('alp416', 'CHANGE-ME');
+select set_team_passcode('bike', 'CHANGE-ME');
+select set_team_passcode('book', 'CHANGE-ME');
+select set_team_passcode('bcll', 'CHANGE-ME');
+select set_team_passcode('gotr', 'CHANGE-ME');
+select set_team_passcode('hfnh', 'CHANGE-ME');
+select set_team_passcode('kdb', 'CHANGE-ME');
+select set_team_passcode('mow', 'CHANGE-ME');
+select set_team_passcode('ncfff', 'CHANGE-ME');
+select set_team_passcode('sdll', 'CHANGE-ME');
+select set_team_passcode('aps', 'CHANGE-ME');
+select set_team_passcode('bcw', 'CHANGE-ME');
+select set_team_passcode('hope', 'CHANGE-ME');
+select set_team_passcode('josh', 'CHANGE-ME');
+select set_team_passcode('mlt', 'CHANGE-ME');
+select set_team_passcode('nccadv', 'CHANGE-ME');
+select set_team_passcode('porch', 'CHANGE-ME');
+select set_team_passcode('spa', 'CHANGE-ME');
+select set_team_passcode('umd', 'CHANGE-ME');
+select set_team_passcode('v2v', 'CHANGE-ME');

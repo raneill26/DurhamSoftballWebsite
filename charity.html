@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css?v=t297528">
+<title>Charity | Durham Softball</title>
+</head>
+<body>
+<div data-header="teams.html"></div>
+<div id="charity-page"></div>
+<div data-footer></div>
+<script src="assets/js/data.js?v=t297528"></script>
+<script src="assets/js/site.js?v=t297528"></script>
+<script>
+(function(){
+  var org = DS.orgById(DSUI.qs('id'));
+  var host = document.getElementById('charity-page');
+
+  if(!org){
+    host.innerHTML='<div class="page-head"><div class="wrap"><div class="crumb">Partners</div>'+
+      '<h1 class="h-lg">Charity not found</h1></div></div>'+
+      '<main class="section"><div class="wrap center">'+
+      '<a class="btn btn-primary" href="teams.html">All non-profit partners</a></div></main>';
+    return;
+  }
+
+  document.title = org.name + ' | Durham Softball';
+
+  var logo = org.logo
+    ? '<img src="'+org.logo+'" alt="'+DSUI.esc(org.name)+'">'
+    : '<div class="logo-fallback" style="width:104px;height:104px;font-size:2.2rem">'+DSUI.esc(org.name.charAt(0))+'</div>';
+
+  var statusPill =
+    org.partnerStatus==='active'   ? '<span class="pill pill-league">Active partner</span>' :
+    org.partnerStatus==='inactive' ? '<span class="pill pill-partner">Inactive partner</span>' :
+                                     '<span class="pill pill-former">Past partner</span>';
+
+  host.innerHTML =
+    '<div class="page-head">'+
+      '<div class="wrap">'+
+        '<div class="crumb"><a href="teams.html">Non-profit partners</a></div>'+
+        '<div class="team-hero">'+logo+
+          '<div><h1 class="h-lg">'+DSUI.esc(org.name)+'</h1>'+
+          '<p style="margin-top:12px">'+DSUI.esc(org.cause)+'</p>'+
+          '<div style="margin-top:14px">'+statusPill+'</div></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+
+    '<main class="section"><div class="wrap wrap-narrow">'+
+      '<div class="prose">'+
+        '<h2>About '+DSUI.esc(org.name)+'</h2>'+
+        (org.blurb
+          ? '<p>'+DSUI.esc(org.blurb)+'</p>'
+          : '<p class="muted">A full description of this organisation has not been added yet. '+
+            'Their write-up on the current league site is linked below.</p>')+
+
+        '<h2>Their connection to the league</h2>'+
+        (org.partnerStatus==='active'
+          ? '<p>'+DSUI.esc(org.name)+' is one of the organisations Durham Softball is raising money for '+
+            'this season. A share of the season donation pool goes directly to them.</p>'
+          : org.partnerStatus==='inactive'
+          ? '<p>'+DSUI.esc(org.name)+' is a current partner of the league without a team this season. '+
+            'Partners can field a team again any season.</p>'
+          : '<p>'+DSUI.esc(org.name)+' has partnered with Durham Softball in past seasons.</p>')+
+      '</div>'+
+
+      '<div class="btn-row" style="margin-top:30px">'+
+        (org.site?'<a class="btn btn-primary" href="'+org.site+'" target="_blank" rel="noopener">Visit their website</a>':'')+
+        (org.url?'<a class="btn btn-outline" href="'+org.url+'" target="_blank" rel="noopener">Their page on the current site</a>':'')+
+        '<a class="btn btn-outline" href="https://paypal.me/plaync" target="_blank" rel="noopener">Donate to the pool</a>'+
+      '</div>'+
+
+      (org.partnerStatus==='active'
+        ? '<div class="card card-pad" style="margin-top:34px">'+
+            '<div class="eyebrow">For players</div>'+
+            '<h3 class="h-sm" style="margin-bottom:10px">Looking for the softball side?</h3>'+
+            '<p class="muted" style="font-size:.95rem;margin-bottom:16px">Schedule, record, and the '+
+            'attendance sheet for the team carrying '+DSUI.esc(org.name)+' this season.</p>'+
+            '<a class="btn btn-primary btn-sm" href="team.html?id='+org.id+'">Go to the team page</a>'+
+          '</div>'
+        : '')+
+
+      '<div class="center" style="margin-top:40px">'+
+        '<a class="btn btn-outline" href="teams.html">&larr; All non-profit partners</a></div>'+
+    '</div></main>';
+})();
+</script>
+</body>
+</html>

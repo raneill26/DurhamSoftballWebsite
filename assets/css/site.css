@@ -524,3 +524,16 @@ a.gc-team-name:hover{color:var(--clay)}
 .drop-zone{border:2px dashed var(--line-2);border-radius:var(--r);padding:34px 20px;text-align:center;
   background:#fff;color:var(--text-mute);transition:border-color .15s,background .15s}
 .drop-zone.over{border-color:var(--clay);background:var(--clay-soft);color:var(--clay)}
+
+/* Homepage charity spotlight */
+.spotlight{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:var(--r-lg);padding:7px}
+.spotlight-head{display:flex;align-items:center;justify-content:space-between;padding:11px 13px 13px}
+.spotlight-head h3{font-size:1.02rem;letter-spacing:.11em;color:#fff}
+.spotlight-body{background:#fff;border-radius:var(--r);padding:26px 24px;text-align:center}
+.spotlight-body img,.spotlight-body .logo-fallback{width:104px;height:104px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--line);background:var(--paper);margin:0 auto 16px}
+.spotlight-name{font-family:var(--display);font-size:1.45rem;font-weight:700;text-transform:uppercase;line-height:1.15;color:var(--text)}
+.spotlight-cause{font-size:.95rem;color:var(--text-soft);margin:10px 0 4px}
+.spotlight-blurb{font-size:.9rem;color:var(--text-mute);line-height:1.6;margin-top:12px;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.spotlight-body .btn{margin-top:20px;width:100%}

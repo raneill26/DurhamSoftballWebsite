@@ -65,13 +65,30 @@
      partners without a team, then former partners. */
   function allOrgs(){
     return TEAMS.map(function(t){
-      return { id:t.id, name:t.name, logo:t.logo, url:t.url, cause:t.cause,
-               status:t.league, isTeam:true };
+      return { id:t.id, name:t.name, logo:t.logo, url:t.url, cause:t.cause, blurb:t.blurb,
+               site:t.site, partnerStatus:'active', league:t.league, isTeam:true };
     }).concat(PARTNERS.map(function(p){
-      return { id:p.id, name:p.name, logo:p.logo, url:p.url, cause:p.cause,
-               status:p.status, isTeam:false };
+      return { id:p.id, name:p.name, logo:p.logo, url:p.url, cause:p.cause, blurb:p.blurb,
+               site:p.site,
+               partnerStatus: p.status === 'former' ? 'former' : 'inactive',
+               league:null, isTeam:false };
     }));
   }
+
+  function orgById(id){
+    var m = allOrgs().filter(function(o){ return o.id === id; });
+    return m.length ? m[0] : null;
+  }
+
+  var STATUS_LABEL = {
+    active:   'Active partner',
+    inactive: 'Inactive partner',
+    former:   'Past partner'
+  };
+
+  /* Playoff cut per league. A League sends its top 8, B League its top 2,
+     to the end-of-season tournament. */
+  var PLAYOFF_CUT = { A: 8, B: 2 };
 
   /* ---------- Photos (from the league's own library) ---------- */
   var PHOTOS = [
@@ -343,6 +360,9 @@
     TEAMS: TEAMS,
     PARTNERS: PARTNERS,
     allOrgs: allOrgs,
+    orgById: orgById,
+    STATUS_LABEL: STATUS_LABEL,
+    PLAYOFF_CUT: PLAYOFF_CUT,
     byId: byId,
     SEASON: SEASON,
     SCHEDULE: SCHEDULE,

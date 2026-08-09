@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t047052">
+<link rel="stylesheet" href="assets/css/site.css?v=t297528">
 <title>Teams &amp; Partners | Durham Softball</title>
 <meta name="description" content="The Durham non-profits Durham Softball raises money for, and the teams that carry their name.">
 </head>
@@ -18,7 +18,7 @@
   <div class="wrap">
     <div class="crumb">Who the league funds</div>
     <h1 class="h-lg">Non-profit partners</h1>
-    <p>These are the Durham organisations the league exists to fund. Twenty are carried by a team this season, the rest are partners between teams.</p>
+    <p>These are the Durham organisations the league exists to fund. Each page here is about the charity itself. For schedules and rosters, see Current Teams.</p>
   </div>
 </div>
 <main class="section">
@@ -26,9 +26,9 @@
     <div class="toolbar">
       <div class="seg" role="tablist" aria-label="Filter by league">
         <button role="tab" aria-selected="true" data-league="all">All</button>
-        <button role="tab" aria-selected="false" data-league="A">A League</button>
-        <button role="tab" aria-selected="false" data-league="B">B League</button>
-        <button role="tab" aria-selected="false" data-league="partner">No team this season</button>
+        <button role="tab" aria-selected="false" data-league="active">Active</button>
+        <button role="tab" aria-selected="false" data-league="inactive">Inactive</button>
+        <button role="tab" aria-selected="false" data-league="former">Past</button>
       </div>
       <span class="spacer"></span>
       <input class="field" type="search" placeholder="Search partners…" data-search>
@@ -36,36 +36,34 @@
     <p class="muted" id="org-count" style="margin:-10px 0 18px;font-size:.9rem"></p>
     <div class="grid grid-4" id="teams-out"></div>
     <p class="muted center" style="margin-top:38px">
-      Partners without a team this season are still part of the league and can field one again any time.<br>
+      Inactive partners are still part of the league and can field a team again any season.<br>
       Interested in bringing your non-profit in?
       <a href="mailto:playncinc@gmail.com" style="color:var(--clay)">Email us</a>.
     </p>
   </div>
 </main>
 <div data-footer></div>
-<script src="assets/js/data.js?v=t047052"></script>
-<script src="assets/js/site.js?v=t047052"></script>
+<script src="assets/js/data.js?v=t297528"></script>
+<script src="assets/js/site.js?v=t297528"></script>
 <script>
 (function(){
   var state={league:'all',q:''};
 
+  var CLS={active:'pill-league',inactive:'pill-partner',former:'pill-former'};
   function tagFor(o){
-    if(o.status==='A'||o.status==='B') return '<span class="pill pill-league">'+o.status+' League</span>';
-    if(o.status==='partner') return '<span class="pill pill-partner">No team this season</span>';
-    return '<span class="pill pill-former">Past partner</span>';
+    return '<span class="pill '+CLS[o.partnerStatus]+'">'+DS.STATUS_LABEL[o.partnerStatus]+'</span>';
   }
 
   function render(){
     var list=DS.allOrgs().sort(function(a,b){return a.name.localeCompare(b.name);}).filter(function(o){
-      if(state.league==='A'||state.league==='B') { if(o.status!==state.league) return false; }
-      else if(state.league==='partner') { if(o.status!=='partner'&&o.status!=='former') return false; }
+      if(state.league!=='all' && o.partnerStatus!==state.league) return false;
       if(state.q&&(o.name+' '+o.cause).toLowerCase().indexOf(state.q)===-1) return false;
       return true;
     });
 
     document.getElementById('teams-out').innerHTML = list.length ? list.map(function(o){
-      var href = o.isTeam ? 'team.html?id='+o.id : o.url;
-      var ext  = o.isTeam ? '' : ' target="_blank" rel="noopener"';
+      var href = 'charity.html?id='+o.id;
+      var ext  = '';
       var img  = o.logo
         ? '<img src="'+o.logo+'" alt="" loading="lazy">'
         : '<div class="logo-fallback">'+DSUI.esc(o.name.charAt(0))+'</div>';

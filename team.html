@@ -7,17 +7,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t047052">
+<link rel="stylesheet" href="assets/css/site.css?v=t297528">
 <title>Team | Durham Softball</title>
 </head>
 <body>
 <div data-header="teams.html"></div>
 <div id="team-page"></div>
 <div data-footer></div>
-<script src="assets/js/config.js?v=t047052"></script>
-<script src="assets/js/data.js?v=t047052"></script>
-<script src="assets/js/api.js?v=t047052"></script>
-<script src="assets/js/site.js?v=t047052"></script>
+<script src="assets/js/config.js?v=t297528"></script>
+<script src="assets/js/data.js?v=t297528"></script>
+<script src="assets/js/api.js?v=t297528"></script>
+<script src="assets/js/site.js?v=t297528"></script>
 <script>
 (function(){
   var id = DSUI.qs('id');
@@ -64,7 +64,7 @@
     '<div class="page-head">'+
       '<img class="page-head-bg" src="'+DS.HERO_PHOTO+'" alt="">'+
       '<div class="wrap">'+
-        '<div class="crumb"><a href="teams.html">Teams</a> &middot; '+team.league+' League</div>'+
+        '<div class="crumb"><a href="current-teams.html">Current teams</a> &middot; '+team.league+' League</div>'+
         '<div class="team-hero">'+
           '<img src="'+team.logo+'" alt="'+DSUI.esc(team.name)+'">'+
           '<div>'+
@@ -103,8 +103,8 @@
               : '<p class="muted" style="font-size:.93rem">The full charity write-up lives on the current league site '+
                 'it would be pulled in here automatically once this design is wired up to the real content.</p>')+
             '<div class="btn-row" style="margin-top:20px">'+
-              (team.site?'<a class="btn btn-primary btn-sm" href="'+team.site+'" target="_blank" rel="noopener">Visit '+DSUI.esc(team.short)+'</a>':'')+
-              '<a class="btn btn-outline btn-sm" href="'+team.url+'" target="_blank" rel="noopener">Current team page</a>'+
+              '<a class="btn btn-primary btn-sm" href="charity.html?id='+team.id+'">About the charity</a>'+
+              (team.site?'<a class="btn btn-outline btn-sm" href="'+team.site+'" target="_blank" rel="noopener">Their website</a>':'')+
             '</div>'+
           '</div>'+
 
@@ -123,7 +123,7 @@
 
       '<section id="attendance" style="margin-top:48px"></section>'+
       '<div style="margin-top:44px" class="center">'+
-        '<a class="btn btn-outline" href="teams.html">&larr; All teams</a></div>'+
+        '<a class="btn btn-outline" href="current-teams.html">&larr; All current teams</a></div>'+
     '</div></main>';
   /* ------------------------------------------------------------------
      Captain attendance: passcode gate, then a per-game roster.

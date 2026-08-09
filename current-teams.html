@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css?v=t297528">
+<title>Current Teams | Durham Softball</title>
+<meta name="description" content="The 20 teams playing in the 2026 Summer season of Durham Softball, by league.">
+</head>
+<body>
+<div data-header="current-teams.html"></div>
+<div class="page-head">
+  <img class="page-head-bg" src="https://durhamsoftball.com/wp-content/uploads/2024/01/Summer_08-04-768x857.jpg" alt="">
+  <div class="wrap">
+    <div class="crumb">2026 Summer season</div>
+    <h1 class="h-lg">Current teams</h1>
+    <p>The twenty teams playing this season. Each team page has the schedule, record, runs, and the attendance sheet.</p>
+  </div>
+</div>
+<main class="section">
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="seg" role="tablist" aria-label="Filter by league">
+        <button role="tab" aria-selected="true" data-league="all">All</button>
+        <button role="tab" aria-selected="false" data-league="A">A League</button>
+        <button role="tab" aria-selected="false" data-league="B">B League</button>
+      </div>
+      <span class="spacer"></span>
+      <input class="field" type="search" placeholder="Search teams…" data-search>
+    </div>
+    <p class="muted" id="team-count" style="margin:-10px 0 18px;font-size:.9rem"></p>
+    <div class="grid grid-4" id="ct-out"></div>
+  </div>
+</main>
+<div data-footer></div>
+<script src="assets/js/data.js?v=t297528"></script>
+<script src="assets/js/site.js?v=t297528"></script>
+<script>
+(function(){
+  var state={league:'all',q:''};
+  function render(){
+    var list=DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).filter(function(t){
+      if(state.league!=='all'&&t.league!==state.league) return false;
+      if(state.q&&(t.name+' '+t.cause).toLowerCase().indexOf(state.q)===-1) return false;
+      return true;
+    });
+    document.getElementById('ct-out').innerHTML = list.length ? list.map(function(t){
+      return '<a class="team-tile" href="team.html?id='+t.id+'">'+
+        '<img src="'+t.logo+'" alt="" loading="lazy">'+
+        '<div class="tile-body"><div class="name">'+DSUI.esc(t.name)+'</div>'+
+        '<div class="meta">'+DSUI.esc(t.cause)+'</div></div>'+
+        '<div class="tile-tag"><span class="pill pill-league">'+t.league+' League</span></div></a>';
+    }).join('') : '<p class="center muted" style="grid-column:1/-1;padding:60px 0">No teams match that search.</p>';
+    document.getElementById('team-count').textContent=list.length+' of '+DS.TEAMS.length+' teams';
+  }
+  document.querySelectorAll('[data-league]').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('[data-league]').forEach(function(o){o.setAttribute('aria-selected','false');});
+      b.setAttribute('aria-selected','true'); state.league=b.getAttribute('data-league'); render();
+    });
+  });
+  document.querySelector('[data-search]').addEventListener('input',function(){
+    state.q=this.value.trim().toLowerCase(); render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
