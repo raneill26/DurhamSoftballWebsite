@@ -11,12 +11,12 @@
    ========================================================================== */
 window.DS_CONFIG = {
   // Supabase > Project Settings > Data API
-  SUPABASE_URL: '',
-  SUPABASE_ANON_KEY: '',
+  SUPABASE_URL: 'https://grlcweyhzvzceftdkxop.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdybGN3ZXloenZ6Y2VmdGRreG9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODU5MjgsImV4cCI6MjEwMTg2MTkyOH0.fh7Q3xZZtixmmONcMFkdsYlTPb7LadOgLiFy19Q8J7k',
 
   // Hosted checkout. Stripe Payment Link, or a PayPal hosted button URL.
   // These are public URLs, nothing secret.
-  REGISTRATION_FEE_URL: '',
+  REGISTRATION_FEE_URL: 'https://paypal.me/plaync',
   REGISTRATION_FEE_LABEL: 'Season registration',
   DONATE_URL: 'https://paypal.me/plaync',
 

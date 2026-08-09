@@ -101,7 +101,7 @@ alter table team_sessions enable row level security;
 -- ---------------------------------------------------------------- public read
 create or replace function public_teams(p_season text)
 returns table (id text, name text, league text, has_login boolean)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select t.id, t.name, t.league, (t.passcode_hash is not null)
   from teams t where t.season_id = p_season order by t.name;
 $$;
@@ -109,7 +109,7 @@ $$;
 -- ---------------------------------------------------------------- team login
 create or replace function team_login(p_team_id text, p_passcode text)
 returns table (token uuid, team_id text, team_name text, expires_at timestamptz)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare v_hash text; v_name text;
 begin
   select passcode_hash, name into v_hash, v_name from teams where id = p_team_id;
@@ -123,14 +123,14 @@ begin
 end; $$;
 
 create or replace function session_team(p_token uuid)
-returns text language sql security definer set search_path = public as $$
+returns text language sql security definer set search_path = public, extensions as $$
   select team_id from team_sessions where token = p_token and expires_at > now();
 $$;
 
 -- ---------------------------------------------------------------- attendance
 create or replace function team_roster(p_token uuid, p_game_id integer)
 returns table (player_id uuid, full_name text, status text, waiver_signed boolean)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare v_team text;
 begin
   v_team := session_team(p_token);
@@ -146,7 +146,7 @@ end; $$;
 
 create or replace function mark_attendance(
   p_token uuid, p_game_id integer, p_player_id uuid, p_status text, p_noted_by text default null)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 declare v_team text;
 begin
   v_team := session_team(p_token);
@@ -165,7 +165,7 @@ create or replace function register_player(
   p_season text, p_full_name text, p_email text, p_phone text, p_team_id text,
   p_waiver_version text, p_signed_name text, p_agreed_hash text, p_user_agent text,
   p_signature_image text default null)
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_player uuid;
 begin
   if length(trim(p_full_name)) < 2 then raise exception 'name required'; end if;
@@ -208,7 +208,7 @@ revoke execute on function session_team(uuid) from anon;
 -- ---------------------------------------------------------------- admin only
 -- Run from the SQL editor:  select set_team_passcode('alp416', 'legion2026');
 create or replace function set_team_passcode(p_team_id text, p_passcode text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, extensions as $$
   update teams set passcode_hash = crypt(p_passcode, gen_salt('bf', 10)) where id = p_team_id;
 $$;
 revoke execute on function set_team_passcode(text, text) from anon;
@@ -258,14 +258,14 @@ alter table champions      enable row level security;
 -- Set the admin passcode from the SQL editor:
 --   select set_admin_passcode('something-long');
 create or replace function set_admin_passcode(p_passcode text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, extensions as $$
   update admin_settings set passcode_hash = crypt(p_passcode, gen_salt('bf', 10)) where id;
 $$;
 revoke execute on function set_admin_passcode(text) from anon;
 
 create or replace function admin_login(p_passcode text)
 returns table (token uuid, expires_at timestamptz)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare v_hash text;
 begin
   select passcode_hash into v_hash from admin_settings where id;
@@ -278,7 +278,7 @@ begin
 end; $$;
 
 create or replace function is_admin(p_token uuid)
-returns boolean language sql security definer set search_path = public as $$
+returns boolean language sql security definer set search_path = public, extensions as $$
   select exists (select 1 from admin_sessions where token = p_token and expires_at > now());
 $$;
 revoke execute on function is_admin(uuid) from anon;
@@ -286,7 +286,7 @@ revoke execute on function is_admin(uuid) from anon;
 -- ---------------------------------------------------------------- photos
 create or replace function list_photos(p_season text default null)
 returns table (id uuid, url text, caption text, season_id text, sort_order integer, is_wide boolean)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select p.id, p.url, p.caption, p.season_id, p.sort_order, p.is_wide
   from photos p
   where p_season is null or p.season_id = p_season
@@ -296,7 +296,7 @@ $$;
 create or replace function admin_save_photo(
   p_token uuid, p_id uuid, p_url text, p_caption text, p_season text,
   p_sort integer default 0, p_wide boolean default false)
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_id uuid;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
@@ -312,7 +312,7 @@ begin
 end; $$;
 
 create or replace function admin_delete_photo(p_token uuid, p_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   delete from photos where id = p_id;
@@ -321,7 +321,7 @@ end; $$;
 -- ---------------------------------------------------------------- champions
 create or replace function list_champions()
 returns table (id uuid, label text, league text, team_name text, photo_url text, caption text)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select c.id, c.label, c.league, c.team_name, c.photo_url, c.caption
   from champions c order by c.label desc;
 $$;
@@ -329,7 +329,7 @@ $$;
 create or replace function admin_save_champion(
   p_token uuid, p_id uuid, p_label text, p_league text,
   p_team text, p_photo text, p_caption text)
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_id uuid;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
@@ -345,7 +345,7 @@ begin
 end; $$;
 
 create or replace function admin_delete_champion(p_token uuid, p_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   delete from champions where id = p_id;
@@ -354,7 +354,7 @@ end; $$;
 -- ---------------------------------------------------------------- seasons
 create or replace function list_seasons()
 returns table (id text, label text, starts_on date, is_current boolean, team_count bigint)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select s.id, s.label, s.starts_on, s.is_current,
          (select count(*) from teams t where t.season_id = s.id)
   from seasons s order by s.starts_on desc nulls last, s.id desc;
@@ -365,7 +365,7 @@ $$;
 create or replace function admin_new_season(
   p_token uuid, p_id text, p_label text, p_starts date,
   p_copy_teams boolean default true, p_make_current boolean default true)
-returns text language plpgsql security definer set search_path = public as $$
+returns text language plpgsql security definer set search_path = public, extensions as $$
 declare v_prev text;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
@@ -393,7 +393,7 @@ begin
 end; $$;
 
 create or replace function admin_set_current_season(p_token uuid, p_id text)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   update seasons set is_current = false;
@@ -401,7 +401,7 @@ begin
 end; $$;
 
 create or replace function admin_set_team_passcode(p_token uuid, p_team_id text, p_passcode text)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   update teams set passcode_hash = crypt(p_passcode, gen_salt('bf', 10)) where id = p_team_id;
