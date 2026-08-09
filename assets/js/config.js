@@ -21,5 +21,5 @@ window.DS_CONFIG = {
   DONATE_URL: 'https://paypal.me/plaync',
 
   CURRENT_SEASON: '2026-summer',
-  WAIVER_VERSION: '2026-v1'
+  WAIVER_VERSION: '2026-v2'
 };
