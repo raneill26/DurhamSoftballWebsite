@@ -26,23 +26,26 @@ insert into teams (id,name,league,season_id) values
   on conflict (id) do update set name=excluded.name, league=excluded.league;
 
 -- Change "CHANGE-ME" for each team password
-select set_team_passcode('alp416', 'CHANGE-ME');
-select set_team_passcode('bike', 'CHANGE-ME');
-select set_team_passcode('book', 'CHANGE-ME');
-select set_team_passcode('bcll', 'CHANGE-ME');
-select set_team_passcode('gotr', 'CHANGE-ME');
-select set_team_passcode('hfnh', 'CHANGE-ME');
-select set_team_passcode('kdb', 'CHANGE-ME');
-select set_team_passcode('mow', 'CHANGE-ME');
-select set_team_passcode('ncfff', 'CHANGE-ME');
-select set_team_passcode('sdll', 'CHANGE-ME');
-select set_team_passcode('aps', 'CHANGE-ME');
-select set_team_passcode('bcw', 'CHANGE-ME');
-select set_team_passcode('hope', 'CHANGE-ME');
-select set_team_passcode('josh', 'CHANGE-ME');
-select set_team_passcode('mlt', 'CHANGE-ME');
-select set_team_passcode('nccadv', 'CHANGE-ME');
-select set_team_passcode('porch', 'CHANGE-ME');
-select set_team_passcode('spa', 'CHANGE-ME');
-select set_team_passcode('umd', 'CHANGE-ME');
-select set_team_passcode('v2v', 'CHANGE-ME');
+select set_team_passcode('alp416', 'alp416');
+select set_team_passcode('bike', 'BIKEdurm');
+select set_team_passcode('book', 'harvestBOOK');
+select set_team_passcode('bcll', 'sdllisbetter');
+select set_team_passcode('gotr', 'girlsOTR');
+select set_team_passcode('hfnh', 'FORnewHOPE');
+select set_team_passcode('kdb', 'keepDURHAMb');
+select set_team_passcode('mow', 'MEALSow');
+select set_team_passcode('ncfff', 'ncFIREf');
+select set_team_passcode('sdll', 'welovementock');
+select set_team_passcode('aps', 'animalPROTECT');
+select set_team_passcode('bcw', 'WORKSHOPbull');
+select set_team_passcode('hope', 'hopeANIMAL');
+select set_team_passcode('josh', 'HOPEjosh');
+select set_team_passcode('mlt', 'miracleTRI');
+select set_team_passcode('nccadv', 'advNCC');
+select set_team_passcode('porch', 'beerlovers');
+select set_team_passcode('spa', 'pharmSENIOR');
+select set_team_passcode('umd', 'URBANmins');
+select set_team_passcode('v2v', 'VETS2vets');
+
+
+select set_admin_passcode('RyansAreBetter');
