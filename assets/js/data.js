@@ -8,32 +8,33 @@
 (function (global) {
   'use strict';
 
-  var CDN = 'https://durhamsoftball.com/wp-content/uploads/';
+  var CDN = '/assets/logos/';
+  var CDN2 = '/assets/Photos/';
 
   /* ---------- Teams ---------- */
   var TEAMS = [
-    { id:'alp416', name:'American Legion Post 416',        short:'Am. Legion 416',   league:'A', logo:CDN+'2026/02/TeamSquare_AmericanLegionPost416-128x128.jpg', url:'https://durhamsoftball.com/teams/american-legion-post-416/', site:'https://al416nc.wixsite.com/al416nc', cause:'Veteran services & military families',
+    { id:'alp416', name:'American Legion Post 416',        short:'Am. Legion 416',   league:'A', logo:CDN+'ALP416.jpg',    url:'https://durhamsoftball.com/teams/american-legion-post-416/', site:'https://al416nc.wixsite.com/al416nc', cause:'Veteran services & military families',
       blurb:'As the only veterans’ service organization located in Research Triangle Park, American Legion Post 416 relentlessly champions veterans and military members, supports military families, and works hard to meet the unique needs of our community in the South Durham County / Northwest Wake County, North Carolina area.' },
-    { id:'bike',   name:'Bike Durham',                     short:'Bike Durham',      league:'A', logo:CDN+'2026/08/TeamSquare_BikeDurham-128x128.jpg',            url:'https://durhamsoftball.com/teams/bike-durham/', cause:'Safe streets & transit advocacy' },
-    { id:'book',   name:'BookHarvest',                     short:'BookHarvest',      league:'A', logo:CDN+'2025/03/BookHarvest-128x128.jpg',                      url:'https://durhamsoftball.com/teams/bookharvest/', cause:'Books & literacy for every child' },
-    { id:'bcll',   name:'Bull City Little League',         short:'Bull City LL',     league:'A', logo:CDN+'2026/08/TeamSquare_BCLL-128x128.jpg',                  url:'https://durhamsoftball.com/teams/bull-city-little-league/', cause:'Youth baseball in Durham' },
-    { id:'gotr',   name:'Girls on the Run of the Triangle',short:'Girls on the Run', league:'A', logo:CDN+'2023/12/TeamSquare_GOTR-128x128.jpg',                  url:'https://durhamsoftball.com/teams/girls-on-the-run-of-the-triangle/', cause:'Confidence & health for girls' },
-    { id:'hfnh',   name:'Housing for New Hope',            short:'Housing New Hope', league:'A', logo:CDN+'2023/12/TeamSquare_HousingForNewHope-128x128.jpg',     url:'https://durhamsoftball.com/teams/housing-for-new-hope/', cause:'Ending homelessness in Durham' },
-    { id:'kdb',    name:'Keep Durham Beautiful',           short:'Keep Durham Btfl', league:'A', logo:CDN+'2025/03/KeepDurhamBeautiful-128x128.jpg',              url:'https://durhamsoftball.com/teams/keep-durham-beautiful/', cause:'Litter cleanup & greening' },
-    { id:'mow',    name:'Meals on Wheels of Durham',       short:'Meals on Wheels',  league:'A', logo:CDN+'2023/12/TeamSquare_MealsOnWheelsOfDurham2022-128x128.jpg', url:'https://durhamsoftball.com/teams/meals-on-wheels-of-durham/', cause:'Meals for homebound neighbors' },
-    { id:'ncfff',  name:'NC Fallen Firefighters Foundation',short:'NC Fallen FF',    league:'A', logo:CDN+'2023/12/TeamSquare_NCFFF-128x128.jpg',                 url:'https://durhamsoftball.com/teams/north-carolina-fallen-firefighters-foundation/', cause:'Support for firefighter families' },
-    { id:'sdll',   name:'South Durham Little League',      short:'South Durham LL',  league:'A', logo:CDN+'2023/12/TeamSquare_SouthDurhamLittleLeague-128x128.jpg', url:'https://durhamsoftball.com/teams/south-durham-little-league/', site:'https://tshq.bluesombrero.com/sdllnc', cause:'Youth baseball, ages 4-16' },
+    { id:'bike',   name:'Bike Durham',                     short:'Bike Durham',      league:'A', logo:CDN+'bike.jpg',      url:'https://durhamsoftball.com/teams/bike-durham/', cause:'Safe streets & transit advocacy' },
+    { id:'book',   name:'BookHarvest',                     short:'BookHarvest',      league:'A', logo:CDN+'BookHarvest.jpg',url:'https://durhamsoftball.com/teams/bookharvest/', cause:'Books & literacy for every child' },
+    { id:'bcll',   name:'Bull City Little League',         short:'Bull City LL',     league:'A', logo:CDN+'bcll.jpg',      url:'https://durhamsoftball.com/teams/bull-city-little-league/', cause:'Youth baseball in Durham' },
+    { id:'gotr',   name:'Girls on the Run of the Triangle',short:'Girls on the Run', league:'A', logo:CDN+'GOTR.jpg',      url:'https://durhamsoftball.com/teams/girls-on-the-run-of-the-triangle/', cause:'Confidence & health for girls' },
+    { id:'hfnh',   name:'Housing for New Hope',            short:'Housing New Hope', league:'A', logo:CDN+'HFNH.jpg',      url:'https://durhamsoftball.com/teams/housing-for-new-hope/', cause:'Ending homelessness in Durham' },
+    { id:'kdb',    name:'Keep Durham Beautiful',           short:'Keep Durham Btfl', league:'A', logo:CDN+'KDB.jpg',       url:'https://durhamsoftball.com/teams/keep-durham-beautiful/', cause:'Litter cleanup & greening' },
+    { id:'mow',    name:'Meals on Wheels of Durham',       short:'Meals on Wheels',  league:'A', logo:CDN+'Meals.jpg',     url:'https://durhamsoftball.com/teams/meals-on-wheels-of-durham/', cause:'Meals for homebound neighbors' },
+    { id:'ncfff',  name:'NC Fallen Firefighters Foundation',short:'NC Fallen FF',    league:'A', logo:CDN+'NCFFF.jpg',     url:'https://durhamsoftball.com/teams/north-carolina-fallen-firefighters-foundation/', cause:'Support for firefighter families' },
+    { id:'sdll',   name:'South Durham Little League',      short:'South Durham LL',  league:'A', logo:CDN+'SDLL.jpg',      url:'https://durhamsoftball.com/teams/south-durham-little-league/', site:'https://tshq.bluesombrero.com/sdllnc', cause:'Youth baseball, ages 4-16' },
 
-    { id:'aps',    name:'Animal Protection Society of Durham', short:'APS of Durham', league:'B', logo:CDN+'2023/12/TeamSquare_APSofDurham-128x128.jpg',          url:'https://durhamsoftball.com/teams/animal-protection-society-of-durham/', site:'https://www.apsofdurham.org/', cause:'Shelter & care for ~4,000 animals a year' },
-    { id:'bcw',    name:'Bull City Woodshop',              short:'BC Woodshop',      league:'B', logo:CDN+'2026/02/Square_BullCityWoodshop-128x128.jpg',          url:'https://durhamsoftball.com/teams/bull-city-woodshop/', cause:'Woodworking education & access' },
-    { id:'hope',   name:'Hope Animal Rescue',              short:'Hope Animal',      league:'B', logo:CDN+'2026/08/TeamSquare_HopeAnimalRescue-128x128.jpg',      url:'https://durhamsoftball.com/teams/hope-animal-rescue/', cause:'Rescue & rehoming' },
-    { id:'josh',   name:'Josh’s Hope',                short:'Josh’s Hope', league:'B', logo:CDN+'2023/12/TeamSquare_JoshsHope-128x128.jpg',             url:'https://durhamsoftball.com/teams/joshs-hope/', cause:'Young adult mental health' },
-    { id:'mlt',    name:'Miracle League of the Triangle',  short:'Miracle League',   league:'B', logo:CDN+'2023/12/TeamSquare_MiracleLeagueOfTheTriangle-128x128.jpg', url:'https://durhamsoftball.com/teams/miracle-league-of-the-triangle/', site:'https://www.mltriangle.com/', cause:'Baseball for children with special needs' },
-    { id:'nccadv', name:'NC Coalition Against Domestic Violence', short:'NCCADV',    league:'B', logo:CDN+'2023/12/TeamSquare_NCCADV2023-Copy-128x128.jpg',       url:'https://durhamsoftball.com/teams/north-carolina-coalition-against-domestic-violence/', cause:'Survivor advocacy statewide' },
-    { id:'porch',  name:'PORCH-Durham',                    short:'PORCH-Durham',     league:'B', logo:CDN+'2023/12/TeamSquare_PORCH2026-128x128.jpg',             url:'https://durhamsoftball.com/teams/porch-durham/', cause:'Hunger relief food drives' },
-    { id:'spa',    name:'Senior PharmAssist',              short:'Senior PharmAsst', league:'B', logo:CDN+'2024/02/2024-Square-Senior-PharmAssist-1-128x128.jpg', url:'https://durhamsoftball.com/teams/senior-pharmassist/', cause:'Medication help for seniors' },
-    { id:'umd',    name:'Urban Ministries of Durham',      short:'Urban Ministries', league:'B', logo:CDN+'2024/01/TeamSquare_UMD-128x128.jpg',                   url:'https://durhamsoftball.com/teams/urban-ministries-of-durham/', cause:'Food, shelter & clothing' },
-    { id:'v2v',    name:'Vets To Vets United',             short:'Vets to Vets',     league:'B', logo:CDN+'2023/12/TeamSquare_VetsToVetsUnited-128x128.jpg',      url:'https://durhamsoftball.com/teams/vets-to-vets-united/', cause:'Veteran peer support' }
+    { id:'aps',    name:'Animal Protection Society of Durham', short:'APS of Durham', league:'B', logo:CDN+'APS.jpg',       url:'https://durhamsoftball.com/teams/animal-protection-society-of-durham/', site:'https://www.apsofdurham.org/', cause:'Shelter & care for ~4,000 animals a year' },
+    { id:'bcw',    name:'Bull City Woodshop',              short:'BC Woodshop',      league:'B', logo:CDN+'BCW.jpg',       url:'https://durhamsoftball.com/teams/bull-city-woodshop/', cause:'Woodworking education & access' },
+    { id:'hope',   name:'Hope Animal Rescue',              short:'Hope Animal',      league:'B', logo:CDN+'HAR.jpg',       url:'https://durhamsoftball.com/teams/hope-animal-rescue/', cause:'Rescue & rehoming' },
+    { id:'josh',   name:'Josh’s Hope',                     short:'Josh’s Hope',      league:'B', logo:CDN+'JoshsHope.jpg', url:'https://durhamsoftball.com/teams/joshs-hope/', cause:'Young adult mental health' },
+    { id:'mlt',    name:'Miracle League of the Triangle',  short:'Miracle League',   league:'B', logo:CDN+'Miracle.jpg',   url:'https://durhamsoftball.com/teams/miracle-league-of-the-triangle/', site:'https://www.mltriangle.com/', cause:'Baseball for children with special needs' },
+    { id:'nccadv', name:'NC Coalition Against Domestic Violence', short:'NCCADV',    league:'B', logo:CDN+'NCCADV.jpg',    url:'https://durhamsoftball.com/teams/north-carolina-coalition-against-domestic-violence/', cause:'Survivor advocacy statewide' },
+    { id:'porch',  name:'PORCH-Durham',                    short:'PORCH-Durham',     league:'B', logo:CDN+'PORCH.jpg',     url:'https://durhamsoftball.com/teams/porch-durham/', cause:'Hunger relief food drives' },
+    { id:'spa',    name:'Senior PharmAssist',              short:'Senior PharmAsst', league:'B', logo:CDN+'Pharm.jpg',     url:'https://durhamsoftball.com/teams/senior-pharmassist/', cause:'Medication help for seniors' },
+    { id:'umd',    name:'Urban Ministries of Durham',      short:'Urban Ministries', league:'B', logo:CDN+'UMD.jpg',       url:'https://durhamsoftball.com/teams/urban-ministries-of-durham/', cause:'Food, shelter & clothing' },
+    { id:'v2v',    name:'Vets To Vets United',             short:'Vets to Vets',     league:'B', logo:CDN+'V2V.jpg',       url:'https://durhamsoftball.com/teams/vets-to-vets-united/', cause:'Veteran peer support' }
   ];
 
   var byId = {};
@@ -49,16 +50,16 @@
              'former'  = past partner
      Sourced from the league's current Non-Profit Partners menu. */
   var PARTNERS = [
-    { id:'c2c',    name:'Crayons2Calculators',                 status:'partner', logo:CDN+'2023/12/TeamSquare_Crayons2Calculators-150x150.jpg', url:'https://durhamsoftball.com/teams/crayons2calculators/', cause:'School supplies for classrooms' },
-    { id:'dbyal',  name:'Durham Bulls Youth Athletic League',   status:'partner', logo:'',                                                        url:'https://durhamsoftball.com/teams/durham-bulls-youth-athletic-league/', cause:'Youth athletics in Durham' },
-    { id:'fmf',    name:'Families Moving Forward',              status:'partner', logo:CDN+'2023/12/TeamSquare_FamiliesMovingForward2023-Copy-150x150.jpg', url:'https://durhamsoftball.com/teams/families-moving-forward/', cause:'Housing for families' },
-    { id:'plaync', name:'Play NC',                              status:'partner', logo:CDN+'2024/03/2024_Square_PlayNC-150x150.jpg',              url:'https://durhamsoftball.com/teams/play-nc/', cause:'The non-profit that runs the league' },
-    { id:'presdur',name:'Preservation Durham',                  status:'partner', logo:CDN+'2025/03/PreservationDurham-150x150.jpg',              url:'https://durhamsoftball.com/teams/preservation-durham/', cause:'Historic preservation' },
-    { id:'swing',  name:'SwingPals',                            status:'partner', logo:CDN+'2023/12/TeamSquare_SwingPals-150x150.jpg',            url:'https://durhamsoftball.com/teams/swingpals/', cause:'Golf and mentorship for youth' },
+    { id:'c2c',    name:'Crayons2Calculators',                 status:'partner', logo:CDN+'C2C.jpg', url:'https://durhamsoftball.com/teams/crayons2calculators/', cause:'School supplies for classrooms' },
+    { id:'dbyal',  name:'Durham Bulls Youth Athletic League',   status:'partner', logo:CDN+'DBYAL.jpg',                                                        url:'https://durhamsoftball.com/teams/durham-bulls-youth-athletic-league/', cause:'Youth athletics in Durham' },
+    { id:'fmf',    name:'Families Moving Forward',              status:'partner', logo:CDN+'FMF.jpg', url:'https://durhamsoftball.com/teams/families-moving-forward/', cause:'Housing for families' },
+    { id:'plaync', name:'Play NC',                              status:'partner', logo:CDN+'PlayNC.jpg',              url:'https://durhamsoftball.com/teams/play-nc/', cause:'The non-profit that runs the league' },
+    { id:'presdur',name:'Preservation Durham',                  status:'partner', logo:CDN+'PD.jpg',              url:'https://durhamsoftball.com/teams/preservation-durham/', cause:'Historic preservation' },
+    { id:'swing',  name:'SwingPals',                            status:'partner', logo:CDN+'SwingPals.jpg',            url:'https://durhamsoftball.com/teams/swingpals/', cause:'Golf and mentorship for youth' },
 
-    { id:'cpcanc', name:'Central Piedmont Community Action',    status:'former',  logo:'', url:'https://durhamsoftball.com/teams/central-piedmont-community-action-of-north-carolina/', cause:'Community action agency' },
-    { id:'dwd',    name:'Don\u2019t Waste Durham',                 status:'former',  logo:'', url:'https://durhamsoftball.com/teams/dont-waste-durham/', cause:'Waste reduction' },
-    { id:'treesd', name:'TreesDurham',                          status:'former',  logo:'', url:'https://durhamsoftball.com/teams/treesdurham/', cause:'Tree planting and canopy' }
+    { id:'cpcanc', name:'Central Piedmont Community Action',    status:'former',  logo:CDN+'CPCAP.jpg', url:'https://durhamsoftball.com/teams/central-piedmont-community-action-of-north-carolina/', cause:'Community action agency' },
+    { id:'dwd',    name:'Don\u2019t Waste Durham',                 status:'former',  logo:CDN+'DWD.jpg', url:'https://durhamsoftball.com/teams/dont-waste-durham/', cause:'Waste reduction' },
+    { id:'treesd', name:'TreesDurham',                          status:'former',  logo:CDN+'Trees.jpg', url:'https://durhamsoftball.com/teams/treesdurham/', cause:'Tree planting and canopy' }
   ];
 
   /* Every organisation the charities page shows: active teams first, then
@@ -92,13 +93,7 @@
 
   /* ---------- Photos (from the league's own library) ---------- */
   var PHOTOS = [
-    { src:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg', caption:'Spring 2025 champions', season:'2025-spring', wide:true },
-    { src:CDN+'2024/01/Summer_08-04-768x857.jpg',                 caption:'Summer game day',      season:'2023-summer' },
-    { src:CDN+'2023/12/End-of-Season-scaled-e1704691499317-754x1024.jpg', caption:'End of season', season:'2023-summer' },
-    { src:CDN+'2024/01/Summer_09-08-e1704335799316.jpg',          caption:'Out at the park',      season:'2023-summer' },
-    { src:CDN+'2024/01/PlayNCSponsored_SDLL_01.jpg',              caption:'South Durham Little League, sponsored by the league', season:'sponsorships' },
-    { src:CDN+'2024/01/PlayNCSponsored_MIRA_01-1024x1024.jpg',    caption:'Miracle League of the Triangle', season:'sponsorships' },
-    { src:CDN+'2024/01/PlayNCSponsored_APS_01-e1704689633414.jpg',caption:'The APS of Durham kennel we sponsor', season:'sponsorships' }
+    { src:CDN2+'2025-Spring-Softball-Champs.jpg', caption:'Spring 2025 champions', season:'2025-spring', wide:true },
   ];
 
   /* Photo seasons. Season tags above are inferred from the league's own file
@@ -115,7 +110,7 @@
      here as their check photos turn up: each needs season, team, and photo. */
   var CHAMPIONS = [
     { season:'Spring 2025', league:'', team:'', teamId:null,
-      photo:CDN+'2025/03/2025-Spring-Softball-Champs-1024x723.jpg',
+      photo:CDN2+'2025-Spring-Softball-Champs.jpg',
       caption:'Spring 2025 champions' }
   ];
 
@@ -132,7 +127,7 @@
       schedule:'https://durhamsoftball.com/schedule/2025-summer-calendar/' }
   ];
 
-  var HERO_PHOTO = CDN + '2025/03/2025-Spring-Softball-Champs-1024x723.jpg';
+  var HERO_PHOTO = CDN + '2025-Spring-Softball-Champs.jpg';
 
   /* ---------- Season config ---------- */
   var SEASON = {
@@ -344,14 +339,15 @@
   }
 
   var REVIEWS = [
-    { quote:'Wonderful opportunity to support our local charities, while having a blast playing softball. Fun for the whole family!!', name:'Terry Morris', role:'Executive Director, Vets to Vets United', img:CDN+'2024/01/Reviews_Terry.jpg' },
-    { quote:'Playing in this league, I have been able to meet people from throughout the Durham community and have fun playing a game I love, all while raising money for charities that give back directly to our community.', name:'Alex Turner', role:'Player, since 2018', img:CDN+'2024/01/Reviews_Alex.jpg' },
-    { quote:'I’ve had a ton of fun so far and have gotten to know friendly new people in the Durham area. The league is super chill, which makes it way more fun and easier to play.', name:'Jen Standish', role:'Player, since 2018', img:CDN+'2024/01/Reviews_Jen.jpg' }
+    { quote:'Wonderful opportunity to support our local charities, while having a blast playing softball. Fun for the whole family!!', name:'Terry Morris', role:'Executive Director, Vets to Vets United', img:CDN2+'Reviews_Terry.jpg' },
+    { quote:'Playing in this league, I have been able to meet people from throughout the Durham community and have fun playing a game I love, all while raising money for charities that give back directly to our community.', name:'Alex Turner', role:'Player, since 2018', img:CDN2+'Reviews_Alex.jpg' },
+    { quote:'I’ve had a ton of fun so far and have gotten to know friendly new people in the Durham area. The league is super chill, which makes it way more fun and easier to play.', name:'Jen Standish', role:'Player, since 2018', img:CDN2+'Reviews_Jen.jpg' }
   ];
 
   global.DS = {
     CDN: CDN,
-    LOGO: CDN + '2023/12/cropped-Durham-Softball-Logo-By-Play-NC.jpg',
+    CDN2: CDN2,
+    LOGO: CDN2 + 'softball.jpg',
     HERO_PHOTO: HERO_PHOTO,
     PHOTOS: PHOTOS,
     PHOTO_SEASONS: PHOTO_SEASONS,
