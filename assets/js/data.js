@@ -10,6 +10,7 @@
 
   var CDN = '/assets/logos/';
   var CDN2 = '/assets/Photos/';
+  var CHARITY_IMG = '/assets/charities/';   // optional: <org id>.jpg, e.g. aps.jpg
 
   /* ---------- Teams ---------- */
   var TEAMS = [
@@ -64,13 +65,23 @@
 
   /* Every organisation the charities page shows: active teams first, then
      partners without a team, then former partners. */
+  /* Charity photos are opt-in. List an id here once you drop
+     assets/charities/<id>.jpg in, and the spotlight will use it instead of
+     the logo. Anything not listed falls back to the logo panel. */
+  var CHARITY_PHOTOS = [];
+
+  function photoFor(id){
+    return CHARITY_PHOTOS.indexOf(id) > -1 ? CHARITY_IMG + id + '.jpg' : null;
+  }
+
   function allOrgs(){
     return TEAMS.map(function(t){
       return { id:t.id, name:t.name, logo:t.logo, url:t.url, cause:t.cause, blurb:t.blurb,
-               site:t.site, partnerStatus:'active', league:t.league, isTeam:true };
+               site:t.site, photo:photoFor(t.id),
+               partnerStatus:'active', league:t.league, isTeam:true };
     }).concat(PARTNERS.map(function(p){
       return { id:p.id, name:p.name, logo:p.logo, url:p.url, cause:p.cause, blurb:p.blurb,
-               site:p.site,
+               site:p.site, photo:photoFor(p.id),
                partnerStatus: p.status === 'former' ? 'former' : 'inactive',
                league:null, isTeam:false };
     }));
@@ -127,7 +138,7 @@
       schedule:'https://durhamsoftball.com/schedule/2025-summer-calendar/' }
   ];
 
-  var HERO_PHOTO = CDN + '2025-Spring-Softball-Champs.jpg';
+  var HERO_PHOTO = CDN2 + 'softball.jpg';
 
   /* ---------- Season config ---------- */
   var SEASON = {
@@ -347,7 +358,8 @@
   global.DS = {
     CDN: CDN,
     CDN2: CDN2,
-    LOGO: CDN2 + 'softball.jpg',
+    LOGO: '/assets/logos/DurhamSoftball.jpg',
+    LOGO_FALLBACK: 'https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC.jpg',
     HERO_PHOTO: HERO_PHOTO,
     PHOTOS: PHOTOS,
     PHOTO_SEASONS: PHOTO_SEASONS,
@@ -359,6 +371,7 @@
     orgById: orgById,
     STATUS_LABEL: STATUS_LABEL,
     PLAYOFF_CUT: PLAYOFF_CUT,
+    CHARITY_PHOTOS: CHARITY_PHOTOS,
     byId: byId,
     SEASON: SEASON,
     SCHEDULE: SCHEDULE,

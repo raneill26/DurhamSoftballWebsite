@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="icon" href="/assets/logos/DurhamSoftball.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t297528">
+<link rel="stylesheet" href="assets/css/site.css?v=t430123">
 <title>Durham Softball | Twenty charities, one league</title>
 <meta name="description" content="Durham Softball funds twenty local non-profits through a co-ed adult softball league in Durham, NC. Over $70,000 raised since 2018.">
 </head>
@@ -40,8 +40,10 @@
         </div>
       </div>
       <div class="spotlight">
-        <div class="spotlight-head"><h3>Partner spotlight</h3><span class="pill pill-gold" id="spot-status"></span></div>
+        <div class="spotlight-head"><h3>Partner spotlight</h3>
+          <span class="pill pill-outline" id="spot-count"></span></div>
         <div class="spotlight-body" id="spotlight"></div>
+        <div class="spot-dots" id="spot-dots"></div>
       </div>
     </div>
   </div>
@@ -158,24 +160,71 @@
 </section>
 
 <div data-footer></div>
-<script src="assets/js/data.js?v=t297528"></script>
-<script src="assets/js/site.js?v=t297528"></script>
+<script src="assets/js/data.js?v=t430123"></script>
+<script src="assets/js/site.js?v=t430123"></script>
 <script>
 (function(){
   document.getElementById('hero-bg').src = DS.HERO_PHOTO;
 
-  // Random partner spotlight, active or not: the charities are the point.
+  /* -------- Partner spotlight carousel --------
+     Active and inactive partners both appear. Rotates every 20s, pauses on
+     hover, and stops advancing while the tab is hidden. */
   var orgs = DS.allOrgs().filter(function(o){ return o.partnerStatus !== 'former'; });
-  var org  = orgs[Math.floor(Math.random()*orgs.length)];
-  document.getElementById('spot-status').textContent =
-    org.partnerStatus === 'active' ? 'Fielding a team' : 'Partner';
-  document.getElementById('spotlight').innerHTML =
-    (org.logo ? '<img src="'+org.logo+'" alt="'+DSUI.esc(org.name)+'">'
-              : '<div class="logo-fallback">'+DSUI.esc(org.name.charAt(0))+'</div>')+
-    '<div class="spotlight-name">'+DSUI.esc(org.name)+'</div>'+
-    '<div class="spotlight-cause">'+DSUI.esc(org.cause)+'</div>'+
-    (org.blurb ? '<p class="spotlight-blurb">'+DSUI.esc(org.blurb)+'</p>' : '')+
-    '<a class="btn btn-primary" href="charity.html?id='+org.id+'">Read about them</a>';
+  for(var i=orgs.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=orgs[i];orgs[i]=orgs[j];orgs[j]=t;}
+
+  var spotHost=document.getElementById('spotlight');
+  var dotHost=document.getElementById('spot-dots');
+  document.getElementById('spot-count').textContent=orgs.length+' partners';
+
+  spotHost.innerHTML =
+    '<button class="spot-nav prev" type="button" aria-label="Previous partner">&#8249;</button>'+
+    '<button class="spot-nav next" type="button" aria-label="Next partner">&#8250;</button>'+
+    orgs.map(function(o,i){
+      // A dedicated charity photo if one has been added, otherwise their logo on a panel.
+      var media = o.photo
+        ? '<div class="spot-photo"><img src="'+o.photo+'" alt="'+DSUI.esc(o.name)+'"></div>'
+        : '<div class="spot-photo is-logo">'+
+            (o.logo?'<img src="'+o.logo+'" alt="'+DSUI.esc(o.name)+'">':'')+
+          '</div>';
+      var badge='<span class="pill '+(o.partnerStatus==='active'?'pill-gold':'pill-outline')+' spot-badge" '+
+        'style="'+(o.partnerStatus==='active'?'':'background:rgba(255,255,255,.9)')+'">'+
+        (o.partnerStatus==='active'?'Fielding a team':'Partner')+'</span>';
+      return '<div class="spot-slide'+(i===0?' on':'')+'" data-slide="'+i+'">'+
+        media+badge+
+        '<div class="spot-text">'+
+          '<div class="spot-name">'+DSUI.esc(o.name)+'</div>'+
+          '<div class="spot-cause">'+DSUI.esc(o.cause)+'</div>'+
+          '<p class="spot-blurb">'+DSUI.esc(o.blurb || o.cause)+'</p>'+
+        '</div>'+
+        '<div class="spot-foot">'+
+          '<a class="btn btn-primary btn-sm" href="charity.html?id='+o.id+'">Read about them</a>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+  dotHost.innerHTML = orgs.map(function(o,i){
+    return '<button type="button" data-dot="'+i+'" aria-current="'+(i===0)+'" '+
+           'aria-label="'+DSUI.esc(o.name)+'"></button>';
+  }).join('');
+
+  var cur=0, timer=null, PERIOD=20000;
+  function go(n){
+    cur=(n+orgs.length)%orgs.length;
+    spotHost.querySelectorAll('.spot-slide').forEach(function(el,i){ el.classList.toggle('on', i===cur); });
+    dotHost.querySelectorAll('[data-dot]').forEach(function(el,i){ el.setAttribute('aria-current', String(i===cur)); });
+  }
+  function start(){ stop(); timer=setInterval(function(){ go(cur+1); }, PERIOD); }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+
+  spotHost.querySelector('.spot-nav.next').addEventListener('click',function(){ go(cur+1); start(); });
+  spotHost.querySelector('.spot-nav.prev').addEventListener('click',function(){ go(cur-1); start(); });
+  dotHost.querySelectorAll('[data-dot]').forEach(function(b){
+    b.addEventListener('click',function(){ go(parseInt(b.getAttribute('data-dot'),10)); start(); });
+  });
+  spotHost.addEventListener('mouseenter',stop);
+  spotHost.addEventListener('mouseleave',start);
+  document.addEventListener('visibilitychange',function(){ document.hidden?stop():start(); });
+  start();
 
   DSUI.mountXFeed(document.getElementById('x-feed'));
   document.getElementById('home-photos').innerHTML = DSUI.photoBand(DS.PHOTOS.slice(1,5));

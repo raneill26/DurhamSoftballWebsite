@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC-270x270.jpg">
+<link rel="icon" href="/assets/logos/DurhamSoftball.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t297528">
+<link rel="stylesheet" href="assets/css/site.css?v=t430123">
 <title>Standings | Durham Softball</title>
 <meta name="description" content="2026 Summer standings for the Durham Softball A and B Leagues.">
 </head>
 <body>
 <div data-header="standings.html"></div>
 <div class="page-head">
-  <img class="page-head-bg" src="https://durhamsoftball.com/wp-content/uploads/2025/03/2025-Spring-Softball-Champs-1024x723.jpg" alt="">
+  <img class="page-head-bg" src="/assets/Photos/2025-Spring-Softball-Champs.jpg" alt="">
   <div class="wrap">
     <div class="crumb">2026 Summer season</div>
     <h1 class="h-lg">Standings</h1>
@@ -49,12 +49,13 @@
   </div>
 </main>
 <div data-footer></div>
-<script src="assets/js/data.js?v=t297528"></script>
-<script src="assets/js/site.js?v=t297528"></script>
+<script src="assets/js/data.js?v=t430123"></script>
+<script src="assets/js/site.js?v=t430123"></script>
 <script>
 (function(){
   var state={league:'both',mode:'live',sortKey:'pct',sortDir:'desc',season:DS.SEASON_ARCHIVE[0].id};
-  document.querySelector('.notice span').innerHTML = DSUI.ICONS.info;
+  var noticeIcon=document.querySelector('.notice span');
+  if(noticeIcon) noticeIcon.innerHTML = DSUI.ICONS.info;
 
   var seasonSel=document.querySelector('[data-season]');
   seasonSel.innerHTML=DS.SEASON_ARCHIVE.map(function(sn){
@@ -72,7 +73,7 @@
     var controls=document.querySelectorAll('[data-league],[data-mode]');
 
     if(!sn.live){
-      notice.style.display='none';
+      if(notice) notice.style.display='none';
       controls.forEach(function(c){c.closest('.seg').style.display='none';});
       document.getElementById('standings-out').innerHTML=
         '<div class="card card-pad center">'+
@@ -86,7 +87,7 @@
           '</div></div>';
       return;
     }
-    notice.style.display='';
+    if(notice) notice.style.display='';
     controls.forEach(function(c){c.closest('.seg').style.display='';});
 
     var results = state.mode==='sample' ? DS.SAMPLE_RESULTS : null;

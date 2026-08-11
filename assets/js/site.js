@@ -61,7 +61,8 @@
       '<header class="site-header">'+
         '<div class="wrap header-bar">'+
           '<a class="brand" href="index.html">'+
-            '<img src="'+DS.LOGO+'" alt="Durham Softball, Play Ball Y\'all">'+
+            '<img src="'+DS.LOGO+'" alt="Durham Softball, Play Ball Y\'all" '+
+              'onerror="this.onerror=null;this.src=DS.LOGO_FALLBACK">'+
             '<span class="brand-txt"><span class="brand-name">Durham Softball</span>'+
             '<span class="brand-tag">Play Ball Y\'all</span></span>'+
           '</a>'+
@@ -106,7 +107,8 @@
       '<footer class="site-footer"><div class="wrap">'+
         '<div class="footer-grid">'+
           '<div class="footer-brand">'+
-            '<img src="'+DS.LOGO+'" alt="Durham Softball">'+
+            '<img src="'+DS.LOGO+'" alt="Durham Softball" '+
+              'onerror="this.onerror=null;this.src=DS.LOGO_FALLBACK">'+
             '<p class="footer-quote">"If you build it, they will come play softball."</p>'+
             '<div class="socials">'+
               '<a href="https://x.com/PlayDurham" target="_blank" rel="noopener" aria-label="X">'+ICONS.x+'</a>'+
@@ -177,8 +179,8 @@
       '</div>'+
       (opts.compact?'':
         '<div class="gc-foot">'+
-          '<span class="gc-note">'+esc(game.venue)+'</span>'+
-          '<a class="gc-link" href="https://durhamsoftball.com/game/'+game.gameId+'/" target="_blank" rel="noopener">Game details '+ICONS.arrow+'</a>'+
+          '<span class="gc-note">'+ICONS.pin+esc(game.venue)+'</span>'+
+          '<span class="gc-note">'+game.league+' League</span>'+
         '</div>')+
     '</article>';
   }
