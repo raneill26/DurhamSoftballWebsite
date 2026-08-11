@@ -118,6 +118,16 @@
 
     listSeasons: function () { return rpc('list_seasons', {}); },
 
+    /* ---- organizations ---- */
+    listOrgs: function (season) { return rpc('list_organizations', { p_season: season || null }); },
+    saveOrg: function (o) {
+      return rpc('admin_save_org', { p_token: adminToken(), p_id: o.id, p_name: o.name,
+        p_short: o.short_name || null, p_cause: o.cause || null, p_blurb: o.blurb || null,
+        p_logo: o.logo_url || null, p_website: o.website || null, p_legacy: o.legacy_url || null,
+        p_status: o.status, p_season: o.season_id || null, p_league: o.league || null });
+    },
+    deleteOrg: function (id) { return rpc('admin_delete_org', { p_token: adminToken(), p_id: id }); },
+
     /* ---- schedule ---- */
     listGames: function (season) { return rpc('list_games', { p_season: season || cfg.CURRENT_SEASON }); },
     saveGame: function (g) {

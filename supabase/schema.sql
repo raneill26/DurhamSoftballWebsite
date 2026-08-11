@@ -647,3 +647,101 @@ grant execute on function admin_save_player(uuid, uuid, text, text, text, text) 
 grant execute on function admin_delete_player(uuid, uuid)               to anon;
 grant execute on function admin_list_players(uuid, text)                to anon;
 grant execute on function admin_set_photo_placement(uuid, uuid, text, integer) to anon;
+
+-- ============================================================================
+-- ORGANIZATIONS  (the charities themselves, admin-managed)
+--
+-- One row per non-profit, independent of any season. `status` drives the
+-- Non-Profit Partners page. League membership is per season and lives in
+-- `teams`, so an org can be A League one season and inactive the next
+-- without losing its description or logo.
+-- ============================================================================
+
+create table if not exists organizations (
+  id          text primary key,               -- 'aps', 'bike', matches data.js ids
+  name        text not null,
+  short_name  text,
+  cause       text,                           -- one-line summary
+  blurb       text,                           -- the full charity description
+  logo_url    text,
+  website     text,                           -- their own site
+  legacy_url  text,                           -- their page on the old site
+  status      text not null default 'inactive'
+              check (status in ('active','inactive','former')),
+  sort_order  integer not null default 0,
+  created_at  timestamptz not null default now()
+);
+alter table organizations enable row level security;
+
+-- Public read: everything except nothing. These are all public-facing fields.
+create or replace function list_organizations(p_season text default null)
+returns table (id text, name text, short_name text, cause text, blurb text,
+               logo_url text, website text, legacy_url text, status text, league text)
+language sql security definer set search_path = public as $$
+  select o.id, o.name, o.short_name, o.cause, o.blurb, o.logo_url, o.website,
+         o.legacy_url, o.status,
+         (select t.league from teams t
+           where t.id = o.id and t.season_id = coalesce(p_season,
+                 (select s.id from seasons s where s.is_current limit 1)))
+  from organizations o
+  order by o.sort_order, o.name;
+$$;
+
+-- Create or update an org, and its league membership for a season in one go.
+-- p_league null removes it from that season's teams.
+create or replace function admin_save_org(
+  p_token uuid, p_id text, p_name text, p_short text, p_cause text, p_blurb text,
+  p_logo text, p_website text, p_legacy text, p_status text,
+  p_season text default null, p_league text default null)
+returns text language plpgsql security definer set search_path = public as $$
+declare v_season text; v_id text;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+
+  v_id := lower(regexp_replace(trim(p_id), '[^a-zA-Z0-9]+', '', 'g'));
+  if length(v_id) < 2 then raise exception 'id must be at least 2 letters or digits'; end if;
+  if length(trim(coalesce(p_name,''))) < 2 then raise exception 'name required'; end if;
+  if p_status not in ('active','inactive','former') then raise exception 'bad status'; end if;
+  if p_status = 'active' and p_league is null then
+    raise exception 'an active partner needs a league';
+  end if;
+  if p_league is not null and p_league not in ('A','B') then raise exception 'league must be A or B'; end if;
+
+  insert into organizations (id, name, short_name, cause, blurb, logo_url, website, legacy_url, status)
+  values (v_id, trim(p_name), nullif(trim(coalesce(p_short,'')),''), p_cause, p_blurb,
+          nullif(trim(coalesce(p_logo,'')),''), nullif(trim(coalesce(p_website,'')),''),
+          nullif(trim(coalesce(p_legacy,'')),''), p_status)
+  on conflict (id) do update set
+    name=excluded.name, short_name=excluded.short_name, cause=excluded.cause,
+    blurb=excluded.blurb, logo_url=excluded.logo_url, website=excluded.website,
+    legacy_url=excluded.legacy_url, status=excluded.status;
+
+  v_season := coalesce(p_season, (select s.id from seasons s where s.is_current limit 1));
+
+  if v_season is not null then
+    if p_league is null then
+      delete from teams where id = v_id and season_id = v_season;
+    else
+      insert into teams (id, name, league, season_id)
+      values (v_id, trim(p_name), p_league, v_season)
+      on conflict (id) do update set name=excluded.name, league=excluded.league,
+                                     season_id=excluded.season_id;
+    end if;
+  end if;
+
+  return v_id;
+end; $$;
+
+create or replace function admin_delete_org(p_token uuid, p_id text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  if exists (select 1 from games g join teams t on t.id in (g.home_team, g.away_team) where t.id = p_id) then
+    raise exception 'this org has games on record, set it to past instead of deleting';
+  end if;
+  delete from organizations where id = p_id;
+end; $$;
+
+grant execute on function list_organizations(text) to anon;
+grant execute on function admin_save_org(uuid, text, text, text, text, text, text, text, text, text, text, text) to anon;
+grant execute on function admin_delete_org(uuid, text) to anon;

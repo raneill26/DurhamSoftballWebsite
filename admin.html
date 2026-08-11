@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t480906">
+<link rel="stylesheet" href="assets/css/site.css?v=t481552">
 </head>
 <body>
 <div data-header=""></div>
@@ -26,14 +26,14 @@
 </main>
 
 <div data-footer></div>
-<script src="assets/js/config.js?v=t480906"></script>
-<script src="assets/js/data.js?v=t480906"></script>
-<script src="assets/js/api.js?v=t480906"></script>
-<script src="assets/js/site.js?v=t480906"></script>
+<script src="assets/js/config.js?v=t481552"></script>
+<script src="assets/js/data.js?v=t481552"></script>
+<script src="assets/js/api.js?v=t481552"></script>
+<script src="assets/js/site.js?v=t481552"></script>
 <script>
 (function(){
   var root=document.getElementById('admin-root');
-  var tab='photos';
+  var tab='partners';
 
   function msg(kind,text){
     return '<div class="form-msg '+kind+'">'+text+'</div>';
@@ -71,7 +71,7 @@
   function shell(){
     root.innerHTML=
       '<div class="admin-tabs">'+
-        ['photos','schedule','results','rosters','champions','seasons','passcodes'].map(function(t){
+        ['partners','photos','schedule','results','rosters','champions','seasons','passcodes'].map(function(t){
           return '<button data-tab="'+t+'" aria-selected="'+(t===tab)+'">'+t+'</button>';
         }).join('')+
         '<span style="margin-left:auto"></span>'+
@@ -85,8 +85,8 @@
         tab=t; shell();
       });
     });
-    ({photos:photosPanel,schedule:schedulePanel,results:resultsPanel,rosters:rostersPanel,
-      champions:champsPanel,seasons:seasonsPanel,passcodes:passPanel})[tab]();
+    ({partners:partnersPanel,photos:photosPanel,schedule:schedulePanel,results:resultsPanel,
+      rosters:rostersPanel,champions:champsPanel,seasons:seasonsPanel,passcodes:passPanel})[tab]();
   }
 
   function panel(html){ setHTML('panel', html); }
@@ -283,6 +283,117 @@
           .catch(function(e){ b.textContent='Set'; alert(e.message); });
       });
     });
+  }
+
+  /* ---------------- partners / organizations ---------------- */
+  function orgForm(o){
+    o = o || { id:'', name:'', short_name:'', cause:'', blurb:'', logo_url:'',
+               website:'', legacy_url:'', status:'inactive', league:null };
+    var isNew = !o.id;
+    function inp(k,label,ph,val){
+      return '<div class="field-row"><label>'+label+'</label>'+
+        '<input type="text" data-f="'+k+'" value="'+DSUI.esc(val||'')+'" placeholder="'+DSUI.esc(ph||'')+'"></div>';
+    }
+    return '<div class="form-card" data-org="'+DSUI.esc(o.id)+'">'+
+      '<h2 class="h-sm" style="margin-bottom:14px">'+(isNew?'Add a partner':DSUI.esc(o.name))+'</h2>'+
+      (isNew ? inp('id','Id','shortname, letters and digits only',o.id)
+             : '<input type="hidden" data-f="id" value="'+DSUI.esc(o.id)+'">')+
+      inp('name','Name','Animal Protection Society of Durham',o.name)+
+      inp('short_name','Short name','APS of Durham',o.short_name)+
+      inp('cause','One-line cause','Shelter and care for animals',o.cause)+
+      '<div class="field-row"><label>Description</label>'+
+        '<textarea data-f="blurb" rows="5" placeholder="The full write-up shown on their charity page" '+
+        'style="width:100%;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:12px 14px;'+
+        'font-family:var(--body);font-size:1rem;color:var(--text)">'+DSUI.esc(o.blurb||'')+'</textarea></div>'+
+      inp('logo_url','Logo path','assets/logos/APS.jpg',o.logo_url)+
+      inp('website','Their website','https://www.apsofdurham.org/',o.website)+
+      '<div style="display:flex;gap:12px;flex-wrap:wrap">'+
+        '<div class="field-row" style="flex:1;min-width:160px"><label>Status</label>'+
+          '<select class="field" data-f="status" style="width:100%">'+
+            ['active','inactive','former'].map(function(st){
+              return '<option value="'+st+'"'+(o.status===st?' selected':'')+'>'+
+                     ({active:'Active partner',inactive:'Inactive partner',former:'Past partner'})[st]+'</option>';
+            }).join('')+'</select></div>'+
+        '<div class="field-row" style="flex:1;min-width:160px"><label>League this season</label>'+
+          '<select class="field" data-f="league" style="width:100%">'+
+            '<option value="">Not playing</option>'+
+            ['A','B'].map(function(L){return '<option value="'+L+'"'+(o.league===L?' selected':'')+'>'+L+' League</option>';}).join('')+
+          '</select></div>'+
+      '</div>'+
+      '<p class="muted" style="font-size:.84rem;margin-bottom:14px">An <strong>active</strong> partner must have '+
+        'a league. Set league to <em>Not playing</em> and status to <em>inactive</em> for a partner sitting a season out.</p>'+
+      '<div class="btn-row">'+
+        '<button class="btn btn-primary btn-sm" data-osave>'+(isNew?'Create partner':'Save changes')+'</button>'+
+        (isNew?'':'<button class="btn btn-outline btn-sm" data-odel style="color:var(--loss)">Delete</button>')+
+        (isNew?'':'<a class="btn btn-outline btn-sm" href="charity.html?id='+DSUI.esc(o.id)+'" target="_blank">View page</a>')+
+      '</div><div data-omsg style="margin-top:12px"></div></div>';
+  }
+
+  function wireOrgForm(card, after){
+    card.querySelector('[data-osave]').addEventListener('click',function(){
+      var b=this, data={};
+      card.querySelectorAll('[data-f]').forEach(function(el){ data[el.getAttribute('data-f')]=el.value.trim(); });
+      data.league = data.league || null;
+      if(data.status==='active' && !data.league){
+        card.querySelector('[data-omsg]').innerHTML=msg('err','An active partner needs a league.'); return;
+      }
+      b.disabled=true; b.textContent='Saving…';
+      DSAPI.saveOrg(data)
+        .then(function(){ card.querySelector('[data-omsg]').innerHTML=msg('ok','Saved.'); if(after) after(); })
+        .catch(function(e){ card.querySelector('[data-omsg]').innerHTML=msg('err',DSUI.esc(e.message)); })
+        .then(function(){ b.disabled=false; b.textContent='Save changes'; });
+    });
+    var del=card.querySelector('[data-odel]');
+    if(del) del.addEventListener('click',function(){
+      var id=card.getAttribute('data-org');
+      if(!confirm('Delete '+id+'? Set them to Past partner instead if they have history.')) return;
+      DSAPI.deleteOrg(id).then(after).catch(function(e){ alert(e.message); });
+    });
+  }
+
+  function partnersPanel(){
+    panel('<div id="org-new"></div>'+
+      '<h2 class="h-sm" style="margin:28px 0 14px">All partners</h2>'+
+      '<p class="muted" style="font-size:.9rem;margin-bottom:16px">Status drives the Non-Profit Partners '+
+      'page. League drives Current Teams and the standings.</p>'+
+      '<div id="org-list">Loading…</div>');
+
+    var nw=document.getElementById('org-new');
+    nw.innerHTML=orgForm(null);
+    wireOrgForm(nw.querySelector('[data-org]'), partnersPanel);
+    loadOrgs();
+  }
+
+  function loadOrgs(){
+    var host=document.getElementById('org-list'); if(!host) return;
+    DSAPI.listOrgs().then(function(rows){
+      if(!rows.length){
+        host.innerHTML='<p class="muted">No organizations in the database yet. '+
+          'Run <code>supabase/seed_orgs.sql</code> to load the current 29, or add them above.</p>';
+        return;
+      }
+      host.innerHTML=rows.map(function(o){
+        var label={active:'Active',inactive:'Inactive',former:'Past'}[o.status];
+        return '<div class="admin-item" data-open="'+DSUI.esc(o.id)+'">'+
+          (o.logo_url?'<img src="'+DSUI.esc(o.logo_url)+'" alt="">':'<div></div>')+
+          '<div class="meta"><b>'+DSUI.esc(o.name)+'</b>'+
+          '<span>'+label+(o.league?' · '+o.league+' League':'')+' · '+DSUI.esc(o.cause||'')+'</span></div>'+
+          '<button class="btn btn-outline btn-sm">Edit</button></div>'+
+          '<div data-edit="'+DSUI.esc(o.id)+'" class="hide" style="margin:-4px 0 14px"></div>';
+      }).join('');
+
+      host.querySelectorAll('[data-open]').forEach(function(row){
+        row.querySelector('button').addEventListener('click',function(){
+          var id=row.getAttribute('data-open');
+          var slot=host.querySelector('[data-edit="'+id+'"]');
+          if(!slot.classList.contains('hide')){ slot.classList.add('hide'); slot.innerHTML=''; return; }
+          var o=rows.filter(function(x){return x.id===id;})[0];
+          slot.innerHTML=orgForm(o);
+          slot.classList.remove('hide');
+          wireOrgForm(slot.querySelector('[data-org]'), partnersPanel);
+        });
+      });
+    }).catch(function(e){ setHTML('org-list', msg('err',DSUI.esc(e.message))); });
   }
 
   /* ---------------- schedule ---------------- */

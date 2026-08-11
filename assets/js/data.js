@@ -75,6 +75,7 @@
   }
 
   function allOrgs(){
+    if(DB_ORGS) return DB_ORGS.slice();
     return TEAMS.map(function(t){
       return { id:t.id, name:t.name, logo:t.logo, url:t.url, cause:t.cause, blurb:t.blurb,
                site:t.site, photo:photoFor(t.id),
@@ -87,9 +88,36 @@
     }));
   }
 
+  /* When a database is connected its organizations replace the built-in list.
+     Pages call DS.loadOrgs() and re-render if it resolves with rows. */
+  var DB_ORGS = null;
+
+  function applyOrgs(rows){
+    if(!rows || !rows.length) return false;
+    DB_ORGS = rows.map(function(r){
+      return { id:r.id, name:r.name, short:r.short_name || r.name, logo:r.logo_url || '',
+               url:r.legacy_url || '', site:r.website || '', cause:r.cause || '',
+               blurb:r.blurb || '', photo:photoFor(r.id),
+               partnerStatus:r.status, league:r.league || null,
+               isTeam: r.status === 'active' && !!r.league };
+    });
+    return true;
+  }
+
+  function loadOrgs(season){
+    if(!global.DSAPI || !global.DSAPI.configured()) return Promise.resolve(false);
+    return global.DSAPI.listOrgs(season).then(applyOrgs).catch(function(){ return false; });
+  }
+
   function orgById(id){
     var m = allOrgs().filter(function(o){ return o.id === id; });
     return m.length ? m[0] : null;
+  }
+
+  /* Teams playing this season, from the database when available. */
+  function activeTeams(){
+    if(DB_ORGS) return DB_ORGS.filter(function(o){ return o.isTeam; });
+    return TEAMS;
   }
 
   var STATUS_LABEL = {
@@ -368,6 +396,8 @@
     TEAMS: TEAMS,
     PARTNERS: PARTNERS,
     allOrgs: allOrgs,
+    activeTeams: activeTeams,
+    loadOrgs: loadOrgs,
     orgById: orgById,
     STATUS_LABEL: STATUS_LABEL,
     PLAYOFF_CUT: PLAYOFF_CUT,

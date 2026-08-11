@@ -101,7 +101,19 @@ at the field.
 
 ---
 
-## 5. The admin page
+## 5. Partners live in the database
+
+Run `supabase/seed_orgs.sql` after `schema.sql` and `seed.sql`. It loads all 29 organizations with
+their names, causes, logos, links and status.
+
+Re-running it refreshes everything **except `blurb`**, on purpose, so descriptions you write in the
+admin are never overwritten by a re-seed.
+
+Once organizations exist in the database they replace the built-in list in `data.js` on the
+Non-Profit Partners page, Current Teams, the charity pages and the homepage spotlight. With no
+database connected the site falls back to `data.js`, so it never breaks.
+
+## 5b. The admin page
 
 `admin.html` lets the owner run the league without touching code. Set the passcode once from the
 SQL editor:
@@ -112,8 +124,11 @@ select set_admin_passcode('something-long-and-not-guessable');
 
 Then sign in at `/admin.html`. Four tabs:
 
-- **Photos** - drag and drop to upload, edit captions, tag a season, delete. Uploaded photos appear
-  on the Photos page automatically.
+- **Partners** - add a new charity or edit an existing one: name, short name, one-line cause, the
+  full description shown on their charity page, logo path, website, status
+  (active / inactive / past) and which league they play in this season. Creating a partner creates
+  their charity page automatically at `charity.html?id=<id>`; no new file is needed.
+- **Photos** - drag and drop to upload, edit captions, tag a season, set placement, delete.
 - **Champions** - record a season, winning team, and check photo. Appears on the Champions page.
 - **Seasons** - start a new season, optionally carrying the current charities across as teams, and
   make it live. This is the season rollover.
@@ -129,9 +144,9 @@ run the commented storage policies at the bottom of `schema.sql`.
 Photos and champions read from the database when one is connected, and fall back to the built-in
 lists in `data.js` when it is not. So the site never breaks, it just shows less.
 
-The **schedule, standings, and teams still come from `data.js`.** Those are the pieces the admin
-page does not yet cover. Fixtures and scores are a bigger build; say the word and it is the natural
-next step.
+Partners, photos, champions, fixtures, results and rosters all read from the database when one is
+connected. The only thing still hard-coded is the fallback copy in `data.js`, which exists so the
+site works before Supabase is set up.
 
 ## 6. Things to decide before launch
 

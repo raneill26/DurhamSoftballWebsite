@@ -7,19 +7,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t480906">
+<link rel="stylesheet" href="assets/css/site.css?v=t481552">
 <title>Charity | Durham Softball</title>
 </head>
 <body>
 <div data-header="teams.html"></div>
 <div id="charity-page"></div>
 <div data-footer></div>
-<script src="assets/js/data.js?v=t480906"></script>
-<script src="assets/js/site.js?v=t480906"></script>
+<script src="assets/js/config.js?v=t481552"></script>
+<script src="assets/js/data.js?v=t481552"></script>
+<script src="assets/js/api.js?v=t481552"></script>
+<script src="assets/js/site.js?v=t481552"></script>
 <script>
 (function(){
-  var org = DS.orgById(DSUI.qs('id'));
   var host = document.getElementById('charity-page');
+
+  function draw(){
+  var org = DS.orgById(DSUI.qs('id'));
 
   if(!org){
     host.innerHTML='<div class="page-head"><div class="wrap"><div class="crumb">Partners</div>'+
@@ -89,6 +93,10 @@
       '<div class="center" style="margin-top:40px">'+
         '<a class="btn btn-outline" href="teams.html">&larr; All non-profit partners</a></div>'+
     '</div></main>';
+  }
+
+  draw();
+  DS.loadOrgs().then(function(ok){ if(ok) draw(); });
 })();
 </script>
 </body>
