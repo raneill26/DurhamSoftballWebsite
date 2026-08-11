@@ -8,9 +8,9 @@
 (function (global) {
   'use strict';
 
-  var CDN = '/assets/logos/';
-  var CDN2 = '/assets/Photos/';
-  var CHARITY_IMG = '/assets/charities/';   // optional: <org id>.jpg, e.g. aps.jpg
+  var CDN = 'assets/logos/';
+  var CDN2 = 'assets/Photos/';
+  var CHARITY_IMG = '/assets/charities/'; 
 
   /* ---------- Teams ---------- */
   var TEAMS = [
