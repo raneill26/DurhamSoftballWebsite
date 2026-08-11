@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t430123">
+<link rel="stylesheet" href="assets/css/site.css?v=t430608">
 </head>
 <body>
 <div data-header=""></div>
@@ -26,10 +26,10 @@
 </main>
 
 <div data-footer></div>
-<script src="assets/js/config.js?v=t430123"></script>
-<script src="assets/js/data.js?v=t430123"></script>
-<script src="assets/js/api.js?v=t430123"></script>
-<script src="assets/js/site.js?v=t430123"></script>
+<script src="assets/js/config.js?v=t430608"></script>
+<script src="assets/js/data.js?v=t430608"></script>
+<script src="assets/js/api.js?v=t430608"></script>
+<script src="assets/js/site.js?v=t430608"></script>
 <script>
 (function(){
   var root=document.getElementById('admin-root');
@@ -38,6 +38,11 @@
   function msg(kind,text){
     return '<div class="form-msg '+kind+'">'+text+'</div>';
   }
+
+  /* Panels get replaced when tabs switch, so any async write has to check the
+     target still exists before touching it. */
+  function setHTML(id,html){ var el=document.getElementById(id); if(el) el.innerHTML=html; return !!el; }
+  function setText(el,t){ if(el) el.textContent=t; }
 
   /* ---------------- login ---------------- */
   function login(err){
@@ -66,7 +71,7 @@
   function shell(){
     root.innerHTML=
       '<div class="admin-tabs">'+
-        ['photos','champions','seasons','passcodes'].map(function(t){
+        ['photos','schedule','results','rosters','champions','seasons','passcodes'].map(function(t){
           return '<button data-tab="'+t+'" aria-selected="'+(t===tab)+'">'+t+'</button>';
         }).join('')+
         '<span style="margin-left:auto"></span>'+
@@ -80,17 +85,22 @@
         tab=t; shell();
       });
     });
-    ({photos:photosPanel,champions:champsPanel,seasons:seasonsPanel,passcodes:passPanel})[tab]();
+    ({photos:photosPanel,schedule:schedulePanel,results:resultsPanel,rosters:rostersPanel,
+      champions:champsPanel,seasons:seasonsPanel,passcodes:passPanel})[tab]();
   }
 
-  function panel(html){ document.getElementById('panel').innerHTML=html; }
+  function panel(html){ setHTML('panel', html); }
 
   /* ---------------- photos ---------------- */
   function photosPanel(){
     panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:14px">Add photos</h2>'+
       '<div class="drop-zone" id="dz">Drag photos here, or <label style="color:var(--clay);cursor:pointer;text-decoration:underline">'+
       'choose files<input type="file" id="file" accept="image/*" multiple hidden></label></div>'+
-      '<div id="up-msg" style="margin-top:14px"></div></div>'+
+      '<div id="up-msg" style="margin-top:14px"></div>'+
+      '<p class="muted" style="font-size:.85rem;margin-top:14px">'+
+        '<strong>Placement</strong> decides where a photo shows: <em>gallery</em> on the Photos page, '+
+        '<em>home</em> in the homepage strip, <em>hero</em> as a page banner, <em>champions</em> on the '+
+        'Champions page. <strong>Sort</strong> orders them, lowest first.</p></div>'+
       '<h2 class="h-sm" style="margin:28px 0 14px">Photo library</h2><div id="plist">Loading…</div>');
 
     var dz=document.getElementById('dz'), input=document.getElementById('file');
@@ -125,6 +135,15 @@
               'style="width:100%;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.9rem">'+
             '<input type="text" value="'+DSUI.esc(p.season_id||'')+'" data-season placeholder="Season id, e.g. 2026-summer" '+
               'style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.85rem">'+
+            '<div style="display:flex;gap:6px;margin-top:6px">'+
+              '<select data-place style="flex:1;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.85rem">'+
+                ['gallery','home','hero','champions'].map(function(pl){
+                  return '<option value="'+pl+'"'+((p.placement||'gallery')===pl?' selected':'')+'>'+pl+'</option>';
+                }).join('')+
+              '</select>'+
+              '<input type="number" data-sort value="'+(p.sort_order||0)+'" title="Sort order" '+
+                'style="width:78px;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.85rem">'+
+            '</div>'+
           '</div>'+
           '<div style="display:flex;flex-direction:column;gap:6px">'+
             '<button class="btn btn-outline btn-sm" data-save>Save</button>'+
@@ -138,7 +157,12 @@
           this.textContent='Saving…';
           DSAPI.savePhoto({id:id,url:row.querySelector('img').src,
             caption:row.querySelector('[data-cap]').value,
-            season_id:row.querySelector('[data-season]').value||null})
+            season_id:row.querySelector('[data-season]').value||null,
+            sort_order:parseInt(row.querySelector('[data-sort]').value,10)||0})
+            .then(function(){
+              return DSAPI.setPhotoPlacement(id, row.querySelector('[data-place]').value,
+                                             parseInt(row.querySelector('[data-sort]').value,10)||0);
+            })
             .then(function(){ row.querySelector('[data-save]').textContent='Saved'; })
             .catch(function(e){ alert('Could not save: '+e.message); });
         });
@@ -161,11 +185,11 @@
 
     document.getElementById('csave').addEventListener('click',function(){
       var label=document.getElementById('cl').value.trim();
-      if(!label) return document.getElementById('cmsg').innerHTML=msg('err','Season label is required.');
+      if(!label) return setHTML('cmsg', msg('err','Season label is required.'));
       DSAPI.saveChampion({label:label,team_name:document.getElementById('ct').value.trim(),
         league:document.getElementById('cg').value.trim(),photo_url:document.getElementById('cp').value.trim()})
-        .then(function(){ document.getElementById('cmsg').innerHTML=msg('ok','Added.'); loadChamps(); })
-        .catch(function(e){ document.getElementById('cmsg').innerHTML=msg('err',DSUI.esc(e.message)); });
+        .then(function(){ setHTML('cmsg', msg('ok','Added.')); loadChamps(); })
+        .catch(function(e){ setHTML('cmsg', msg('err',DSUI.esc(e.message))); });
     });
     loadChamps();
   }
@@ -205,7 +229,7 @@
     document.getElementById('snew').addEventListener('click',function(){
       var id=document.getElementById('sid').value.trim();
       var label=document.getElementById('slab').value.trim();
-      if(!id||!label) return document.getElementById('smsg').innerHTML=msg('err','Season id and display name are both required.');
+      if(!id||!label) return setHTML('smsg', msg('err','Season id and display name are both required.'));
       this.disabled=true; this.textContent='Creating…';
       DSAPI.newSeason({id:id,label:label,starts_on:document.getElementById('sdate').value.trim()||null,
         copy_teams:document.getElementById('scopy').checked,make_current:document.getElementById('scur').checked})
@@ -213,7 +237,7 @@
         .catch(function(e){
           document.getElementById('snew').disabled=false;
           document.getElementById('snew').textContent='Create season';
-          document.getElementById('smsg').innerHTML=msg('err',DSUI.esc(e.message));
+          setHTML('smsg', msg('err',DSUI.esc(e.message)));
         });
     });
     loadSeasons();
@@ -259,6 +283,191 @@
           .catch(function(e){ b.textContent='Set'; alert(e.message); });
       });
     });
+  }
+
+  /* ---------------- schedule ---------------- */
+  function teamOptions(sel){
+    return DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+      .map(function(t){return '<option value="'+t.id+'"'+(t.id===sel?' selected':'')+'>'+
+        DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('');
+  }
+
+  function schedulePanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:6px">Generate a full season</h2>'+
+      '<p class="muted" style="font-size:.9rem;margin-bottom:16px">Builds a round-robin slate for every '+
+      'team in the live season, one game each per week, home and away alternating. This replaces any '+
+      'games still marked <em>scheduled</em>. Finals and recorded scores are left alone.</p>'+
+      '<div class="field-row"><label for="gdate">First game day</label><input type="date" id="gdate"></div>'+
+      '<div class="field-row"><label for="gweeks">Weeks</label><input type="text" id="gweeks" value="8"></div>'+
+      '<div class="field-row"><label for="gtime">First pitch</label><input type="text" id="gtime" value="09:10"></div>'+
+      '<div class="field-row"><label for="gslot">Minutes between games</label><input type="text" id="gslot" value="55"></div>'+
+      '<button class="btn btn-primary" id="ggen">Generate schedule</button>'+
+      '<div id="gmsg" style="margin-top:12px"></div></div>'+
+
+      '<div class="form-card" style="margin-top:22px"><h2 class="h-sm" style="margin-bottom:14px">Add one game</h2>'+
+      '<div class="field-row"><label>Date</label><input type="date" id="ndate"></div>'+
+      '<div class="field-row"><label>Time (24h)</label><input type="text" id="ntime" placeholder="13:45"></div>'+
+      '<div class="field-row"><label>Home team</label><select class="field" id="nhome" style="width:100%">'+teamOptions()+'</select></div>'+
+      '<div class="field-row"><label>Away team</label><select class="field" id="naway" style="width:100%">'+teamOptions()+'</select></div>'+
+      '<button class="btn btn-outline" id="nadd">Add game</button>'+
+      '<div id="nmsg" style="margin-top:12px"></div></div>'+
+
+      '<h2 class="h-sm" style="margin:28px 0 14px">Fixtures</h2><div id="glist">Loading…</div>');
+
+    document.getElementById('ggen').addEventListener('click',function(){
+      var d=document.getElementById('gdate').value;
+      if(!d) return setHTML('gmsg', msg('err','Pick a first game day.'));
+      if(!confirm('Replace all scheduled games for the live season?')) return;
+      this.disabled=true; this.textContent='Generating…';
+      DSAPI.generateSchedule({first_date:d,weeks:parseInt(document.getElementById('gweeks').value,10)||8,
+        first_time:document.getElementById('gtime').value||'09:10',
+        slot_minutes:parseInt(document.getElementById('gslot').value,10)||55})
+        .then(function(n){ setHTML('gmsg', msg('ok',n+' games created.')); loadGames(); })
+        .catch(function(e){ setHTML('gmsg', msg('err',DSUI.esc(e.message))); })
+        .then(function(){ var b=document.getElementById('ggen'); if(b){b.disabled=false;b.textContent='Generate schedule';} });
+    });
+
+    document.getElementById('nadd').addEventListener('click',function(){
+      var d=document.getElementById('ndate').value, t=document.getElementById('ntime').value.trim();
+      if(!d||!t) return setHTML('nmsg', msg('err','Date and time are both needed.'));
+      DSAPI.saveGame({game_date:d,game_time:t,
+        home_team:document.getElementById('nhome').value,
+        away_team:document.getElementById('naway').value})
+        .then(function(){ setHTML('nmsg', msg('ok','Added.')); loadGames(); })
+        .catch(function(e){ setHTML('nmsg', msg('err',DSUI.esc(e.message))); });
+    });
+    loadGames();
+  }
+
+  function gameRow(g){
+    var h=DS.byId[g.home_team], a=DS.byId[g.away_team];
+    return '<div class="admin-item" data-id="'+g.id+'"><div></div>'+
+      '<div class="meta"><b>'+DSUI.esc(a?a.short:g.away_team)+' at '+DSUI.esc(h?h.short:g.home_team)+'</b>'+
+      '<span>'+g.game_date+' · '+g.game_time.slice(0,5)+' · '+(g.league||'')+' League'+
+      (g.status!=='scheduled'?' · '+g.status:'')+
+      (g.home_score!=null?' · '+g.away_score+'-'+g.home_score:'')+'</span></div>'+
+      '<button class="btn btn-outline btn-sm" data-del style="color:var(--loss)">Delete</button></div>';
+  }
+
+  function loadGames(){
+    var host=document.getElementById('glist'); if(!host) return;
+    DSAPI.listGames().then(function(rows){
+      host.innerHTML=rows.length?rows.map(gameRow).join(''):'<p class="muted">No fixtures yet.</p>';
+      host.querySelectorAll('[data-del]').forEach(function(b){
+        b.addEventListener('click',function(){
+          var id=b.closest('.admin-item').getAttribute('data-id');
+          if(confirm('Delete this game?')) DSAPI.deleteGame(id).then(loadGames);
+        });
+      });
+    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
+  }
+
+  /* ---------------- results ---------------- */
+  function resultsPanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:6px">Log scores</h2>'+
+      '<p class="muted" style="font-size:.9rem;margin-bottom:8px">Enter a final for any fixture, this '+
+      'season or a past one. Standings recalculate from these.</p>'+
+      '<select class="field" id="rseason" style="width:100%"></select></div>'+
+      '<div id="rlist" style="margin-top:20px">Loading…</div>');
+
+    DSAPI.listSeasons().then(function(ss){
+      var sel=document.getElementById('rseason');
+      sel.innerHTML=ss.map(function(s){
+        return '<option value="'+DSUI.esc(s.id)+'"'+(s.is_current?' selected':'')+'>'+
+               DSUI.esc(s.label)+(s.is_current?' (live)':'')+'</option>';
+      }).join('');
+      sel.addEventListener('change',function(){ loadResults(this.value); });
+      loadResults(sel.value);
+    }).catch(function(e){ setHTML('rlist', msg('err',DSUI.esc(e.message))); });
+  }
+
+  function loadResults(season){
+    var host=document.getElementById('rlist'); if(!host) return;
+    DSAPI.listGames(season).then(function(rows){
+      if(!rows.length){ host.innerHTML='<p class="muted">No fixtures in that season yet.</p>'; return; }
+      host.innerHTML=rows.map(function(g){
+        var h=DS.byId[g.home_team], a=DS.byId[g.away_team];
+        return '<div class="admin-item" data-id="'+g.id+'"><div></div>'+
+          '<div class="meta"><b>'+DSUI.esc(a?a.short:g.away_team)+' at '+DSUI.esc(h?h.short:g.home_team)+'</b>'+
+          '<span>'+g.game_date+' · '+g.game_time.slice(0,5)+'</span></div>'+
+          '<div style="display:flex;gap:6px;align-items:center">'+
+            '<input type="number" data-as value="'+(g.away_score!=null?g.away_score:'')+'" placeholder="A" '+
+              'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
+            '<input type="number" data-hs value="'+(g.home_score!=null?g.home_score:'')+'" placeholder="H" '+
+              'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
+            '<button class="btn btn-outline btn-sm" data-save>Save</button>'+
+          '</div></div>';
+      }).join('');
+      host.querySelectorAll('[data-save]').forEach(function(b){
+        b.addEventListener('click',function(){
+          var row=b.closest('.admin-item');
+          var hs=parseInt(row.querySelector('[data-hs]').value,10);
+          var as_=parseInt(row.querySelector('[data-as]').value,10);
+          if(isNaN(hs)||isNaN(as_)) return alert('Enter both scores.');
+          b.textContent='Saving…';
+          DSAPI.setScore(row.getAttribute('data-id'),hs,as_,'final')
+            .then(function(){ b.textContent='Saved'; })
+            .catch(function(e){ b.textContent='Save'; alert(e.message); });
+        });
+      });
+    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
+  }
+
+  /* ---------------- rosters ---------------- */
+  function rostersPanel(){
+    panel('<div class="form-card"><h2 class="h-sm" style="margin-bottom:14px">Add a player</h2>'+
+      '<div class="field-row"><label>Name</label><input type="text" id="pn"></div>'+
+      '<div class="field-row"><label>Email</label><input type="text" id="pe"></div>'+
+      '<div class="field-row"><label>Team</label><select class="field" id="pt" style="width:100%">'+
+        '<option value="">Not assigned</option>'+teamOptions()+'</select></div>'+
+      '<button class="btn btn-primary" id="padd">Add player</button>'+
+      '<div id="pmsg" style="margin-top:12px"></div></div>'+
+      '<h2 class="h-sm" style="margin:28px 0 14px">Roster</h2><div id="plist2">Loading…</div>');
+
+    document.getElementById('padd').addEventListener('click',function(){
+      var n=document.getElementById('pn').value.trim();
+      if(n.length<2) return setHTML('pmsg', msg('err','Name is required.'));
+      DSAPI.savePlayer({full_name:n,email:document.getElementById('pe').value.trim(),
+        team_id:document.getElementById('pt').value})
+        .then(function(){ setHTML('pmsg', msg('ok','Added.'));
+          document.getElementById('pn').value='';document.getElementById('pe').value='';loadRoster(); })
+        .catch(function(e){ setHTML('pmsg', msg('err',DSUI.esc(e.message))); });
+    });
+    loadRoster();
+  }
+
+  function loadRoster(){
+    var host=document.getElementById('plist2'); if(!host) return;
+    DSAPI.listPlayers().then(function(rows){
+      if(!rows.length){ host.innerHTML='<p class="muted">No players registered yet.</p>'; return; }
+      host.innerHTML=rows.map(function(p){
+        return '<div class="admin-item" data-id="'+p.id+'"><div></div>'+
+          '<div class="meta"><b>'+DSUI.esc(p.full_name)+
+            (p.waiver_signed?'':' <span class="pill pill-former">No waiver</span>')+'</b>'+
+            '<span>'+DSUI.esc(p.email||'')+'</span>'+
+            '<select data-team style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.85rem">'+
+              '<option value="">Not assigned</option>'+teamOptions(p.team_id)+'</select>'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:6px">'+
+            '<button class="btn btn-outline btn-sm" data-save>Save</button>'+
+            '<button class="btn btn-outline btn-sm" data-del style="color:var(--loss)">Remove</button>'+
+          '</div></div>';
+      }).join('');
+      host.querySelectorAll('.admin-item').forEach(function(row){
+        var id=row.getAttribute('data-id');
+        row.querySelector('[data-save]').addEventListener('click',function(){
+          var b=this; b.textContent='Saving…';
+          DSAPI.savePlayer({id:id,full_name:row.querySelector('b').textContent.replace('No waiver','').trim(),
+            email:row.querySelector('span').textContent.trim(),
+            team_id:row.querySelector('[data-team]').value})
+            .then(function(){ b.textContent='Saved'; })
+            .catch(function(e){ b.textContent='Save'; alert(e.message); });
+        });
+        row.querySelector('[data-del]').addEventListener('click',function(){
+          if(confirm('Remove this player from the season?')) DSAPI.deletePlayer(id).then(loadRoster);
+        });
+      });
+    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
   }
 
   var s=DSAPI.adminSession();

@@ -117,6 +117,44 @@
     deleteChampion: function (id) { return rpc('admin_delete_champion', { p_token: adminToken(), p_id: id }); },
 
     listSeasons: function () { return rpc('list_seasons', {}); },
+
+    /* ---- schedule ---- */
+    listGames: function (season) { return rpc('list_games', { p_season: season || cfg.CURRENT_SEASON }); },
+    saveGame: function (g) {
+      return rpc('admin_save_game', { p_token: adminToken(), p_id: g.id || null,
+        p_season: g.season_id || cfg.CURRENT_SEASON, p_date: g.game_date, p_time: g.game_time,
+        p_home: g.home_team, p_away: g.away_team, p_venue: g.venue || 'Pineywood Park',
+        p_home_score: g.home_score, p_away_score: g.away_score, p_status: g.status || 'scheduled' });
+    },
+    deleteGame: function (id) { return rpc('admin_delete_game', { p_token: adminToken(), p_id: id }); },
+    setScore: function (id, hs, as_, status) {
+      return rpc('admin_set_score', { p_token: adminToken(), p_id: id,
+        p_home_score: hs, p_away_score: as_, p_status: status || 'final' });
+    },
+    generateSchedule: function (o) {
+      return rpc('admin_generate_schedule', { p_token: adminToken(),
+        p_season: o.season || cfg.CURRENT_SEASON, p_first_date: o.first_date,
+        p_weeks: o.weeks, p_first_time: o.first_time || '09:10',
+        p_slot_minutes: o.slot_minutes || 55 });
+    },
+
+    /* ---- rosters ---- */
+    listPlayers: function (season) {
+      return rpc('admin_list_players', { p_token: adminToken(), p_season: season || cfg.CURRENT_SEASON });
+    },
+    savePlayer: function (p) {
+      return rpc('admin_save_player', { p_token: adminToken(), p_id: p.id || null,
+        p_season: p.season_id || cfg.CURRENT_SEASON, p_name: p.full_name,
+        p_email: p.email || '', p_team: p.team_id || '' });
+    },
+    deletePlayer: function (id) { return rpc('admin_delete_player', { p_token: adminToken(), p_id: id }); },
+
+    /* ---- photo placement ---- */
+    photosByPlacement: function (place) { return rpc('list_photos_by_placement', { p_placement: place }); },
+    setPhotoPlacement: function (id, placement, sort) {
+      return rpc('admin_set_photo_placement', { p_token: adminToken(), p_id: id,
+        p_placement: placement, p_sort: sort || 0 });
+    },
     newSeason: function (o) {
       return rpc('admin_new_season', { p_token: adminToken(), p_id: o.id, p_label: o.label,
         p_starts: o.starts_on || null, p_copy_teams: o.copy_teams !== false,

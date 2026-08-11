@@ -432,3 +432,218 @@ grant execute on function admin_set_team_passcode(uuid, text, text) to anon;
 --   for select using (bucket_id = 'photos');
 -- create policy "anon upload photos" on storage.objects
 --   for insert with check (bucket_id = 'photos');
+
+-- ============================================================================
+-- SCHEDULE, ROSTERS, RESULTS  (admin-managed)
+-- ============================================================================
+
+create table if not exists games (
+  id          uuid primary key default gen_random_uuid(),
+  season_id   text not null references seasons(id) on delete cascade,
+  legacy_id   integer,                    -- the league's own game id, if any
+  game_date   date not null,
+  game_time   time not null,
+  home_team   text not null references teams(id) on delete cascade,
+  away_team   text not null references teams(id) on delete cascade,
+  league      text check (league in ('A','B')),
+  venue       text default 'Pineywood Park',
+  home_score  integer,
+  away_score  integer,
+  status      text not null default 'scheduled'
+              check (status in ('scheduled','final','rainout','forfeit')),
+  created_at  timestamptz not null default now(),
+  check (home_team <> away_team)
+);
+create index if not exists games_season_date_idx on games (season_id, game_date, game_time);
+
+alter table games enable row level security;
+
+-- photo placement: where a photo is allowed to surface
+alter table photos add column if not exists placement text not null default 'gallery';
+-- 'gallery' | 'home' | 'hero' | 'champions'
+
+-- ---------------------------------------------------------------- public read
+create or replace function list_games(p_season text)
+returns table (id uuid, legacy_id integer, game_date date, game_time time,
+               home_team text, away_team text, league text, venue text,
+               home_score integer, away_score integer, status text)
+language sql security definer set search_path = public as $$
+  select g.id, g.legacy_id, g.game_date, g.game_time, g.home_team, g.away_team,
+         g.league, g.venue, g.home_score, g.away_score, g.status
+  from games g where g.season_id = p_season
+  order by g.game_date, g.game_time;
+$$;
+
+create or replace function list_players(p_season text)
+returns table (id uuid, full_name text, email text, team_id text, waiver_signed boolean)
+language sql security definer set search_path = public as $$
+  select p.id, p.full_name, p.email, p.team_id,
+         exists (select 1 from waivers w where w.player_id = p.id and w.season_id = p.season_id)
+  from players p where p.season_id = p_season order by p.team_id nulls first, p.full_name;
+$$;
+revoke execute on function list_players(text) from anon;   -- admin only, holds emails
+
+-- ---------------------------------------------------------------- games admin
+create or replace function admin_save_game(
+  p_token uuid, p_id uuid, p_season text, p_date date, p_time time,
+  p_home text, p_away text, p_venue text default 'Pineywood Park',
+  p_home_score integer default null, p_away_score integer default null,
+  p_status text default 'scheduled')
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_id uuid; v_league text;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  if p_home = p_away then raise exception 'a team cannot play itself'; end if;
+  select league into v_league from teams where id = p_home and season_id = p_season;
+  if v_league is null then raise exception 'home team is not in this season'; end if;
+  if not exists (select 1 from teams where id = p_away and season_id = p_season) then
+    raise exception 'away team is not in this season';
+  end if;
+
+  if p_id is null then
+    insert into games (season_id, game_date, game_time, home_team, away_team, league,
+                       venue, home_score, away_score, status)
+    values (p_season, p_date, p_time, p_home, p_away, v_league,
+            coalesce(p_venue,'Pineywood Park'), p_home_score, p_away_score, p_status)
+    returning id into v_id;
+  else
+    update games set game_date=p_date, game_time=p_time, home_team=p_home, away_team=p_away,
+                     league=v_league, venue=coalesce(p_venue,'Pineywood Park'),
+                     home_score=p_home_score, away_score=p_away_score, status=p_status
+    where id=p_id returning id into v_id;
+  end if;
+  return v_id;
+end; $$;
+
+create or replace function admin_delete_game(p_token uuid, p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  delete from games where id = p_id;
+end; $$;
+
+create or replace function admin_set_score(
+  p_token uuid, p_id uuid, p_home_score integer, p_away_score integer, p_status text default 'final')
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  update games set home_score=p_home_score, away_score=p_away_score, status=p_status where id=p_id;
+end; $$;
+
+-- Generate a full round-robin slate for a season. Wipes any existing scheduled
+-- games for that season first (finals and results are preserved).
+create or replace function admin_generate_schedule(
+  p_token uuid, p_season text, p_first_date date, p_weeks integer,
+  p_first_time time default '09:10', p_slot_minutes integer default 55)
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  v_made integer := 0;
+  v_week integer;
+  v_date date;
+  v_slot integer;
+  r record;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+
+  delete from games where season_id = p_season and status = 'scheduled';
+
+  for v_week in 0 .. p_weeks - 1 loop
+    v_date := p_first_date + (v_week * 7);
+    v_slot := 0;
+    for r in
+      -- circle-method pairing per league, rotated by week
+      with t as (
+        select id, league, row_number() over (partition by league order by name) - 1 as n,
+               count(*) over (partition by league) as total
+        from teams where season_id = p_season
+      ),
+      pairs as (
+        select a.league,
+               case when v_week % 2 = 0 then a.id else b.id end as home,
+               case when v_week % 2 = 0 then b.id else a.id end as away,
+               a.n as ord
+        from t a join t b
+          on a.league = b.league
+         and b.n = ( (a.total - 1) - ((a.n + v_week) % (a.total - 1)) ) % a.total
+         and a.n < b.n
+      )
+      select * from pairs order by league, ord
+    loop
+      insert into games (season_id, game_date, game_time, home_team, away_team, league)
+      values (p_season, v_date,
+              p_first_time + (v_slot * p_slot_minutes || ' minutes')::interval,
+              r.home, r.away, r.league);
+      v_slot := v_slot + 1;
+      v_made := v_made + 1;
+    end loop;
+  end loop;
+  return v_made;
+end; $$;
+
+-- ---------------------------------------------------------------- roster admin
+create or replace function admin_save_player(
+  p_token uuid, p_id uuid, p_season text, p_name text, p_email text, p_team text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_id uuid;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  if length(trim(p_name)) < 2 then raise exception 'name required'; end if;
+  if p_id is null then
+    insert into players (full_name, email, team_id, season_id)
+    values (trim(p_name), lower(trim(p_email)), nullif(p_team,''), p_season)
+    on conflict (email, season_id) do update
+      set full_name = excluded.full_name, team_id = excluded.team_id
+    returning id into v_id;
+  else
+    update players set full_name=trim(p_name), email=lower(trim(p_email)), team_id=nullif(p_team,'')
+    where id=p_id returning id into v_id;
+  end if;
+  return v_id;
+end; $$;
+
+create or replace function admin_delete_player(p_token uuid, p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  delete from players where id = p_id;
+end; $$;
+
+create or replace function admin_list_players(p_token uuid, p_season text)
+returns table (id uuid, full_name text, email text, team_id text, waiver_signed boolean)
+language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  return query
+    select p.id, p.full_name, p.email, p.team_id,
+           exists (select 1 from waivers w where w.player_id = p.id and w.season_id = p.season_id)
+    from players p where p.season_id = p_season
+    order by p.team_id nulls first, p.full_name;
+end; $$;
+
+-- ---------------------------------------------------------------- photo placement
+create or replace function admin_set_photo_placement(
+  p_token uuid, p_id uuid, p_placement text, p_sort integer)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  update photos set placement = p_placement, sort_order = p_sort where id = p_id;
+end; $$;
+
+create or replace function list_photos_by_placement(p_placement text)
+returns table (id uuid, url text, caption text, season_id text, sort_order integer, is_wide boolean)
+language sql security definer set search_path = public as $$
+  select p.id, p.url, p.caption, p.season_id, p.sort_order, p.is_wide
+  from photos p where p.placement = p_placement order by p.sort_order, p.created_at desc;
+$$;
+
+-- ---------------------------------------------------------------- grants
+grant execute on function list_games(text)                              to anon;
+grant execute on function list_photos_by_placement(text)                to anon;
+grant execute on function admin_save_game(uuid, uuid, text, date, time, text, text, text, integer, integer, text) to anon;
+grant execute on function admin_delete_game(uuid, uuid)                 to anon;
+grant execute on function admin_set_score(uuid, uuid, integer, integer, text) to anon;
+grant execute on function admin_generate_schedule(uuid, text, date, integer, time, integer) to anon;
+grant execute on function admin_save_player(uuid, uuid, text, text, text, text) to anon;
+grant execute on function admin_delete_player(uuid, uuid)               to anon;
+grant execute on function admin_list_players(uuid, text)                to anon;
+grant execute on function admin_set_photo_placement(uuid, uuid, text, integer) to anon;

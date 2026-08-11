@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t430123">
+<link rel="stylesheet" href="assets/css/site.css?v=t430608">
 <title>Schedule | Durham Softball</title>
 <meta name="description" content="Full 2026 Summer schedule for Durham Softball. Every matchup shows the away and home team clearly labelled.">
 </head>
@@ -43,8 +43,10 @@
   </div>
 </main>
 <div data-footer></div>
-<script src="assets/js/data.js?v=t430123"></script>
-<script src="assets/js/site.js?v=t430123"></script>
+<script src="assets/js/config.js?v=t430608"></script>
+<script src="assets/js/data.js?v=t430608"></script>
+<script src="assets/js/api.js?v=t430608"></script>
+<script src="assets/js/site.js?v=t430608"></script>
 <script>
 (function(){
   var state={league:'all',team:'all'};
@@ -62,8 +64,10 @@
     var t=document.getElementById(this.value); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
   });
 
+  var SCHEDULE = DS.SCHEDULE;
+
   function render(){
-    var out=DS.SCHEDULE.map(function(day){
+    var out=SCHEDULE.map(function(day){
       var games=day.games.filter(function(g){
         if(state.league!=='all'&&g.league!==state.league) return false;
         if(state.team!=='all'&&g.home!==state.team&&g.away!==state.team) return false;
@@ -89,6 +93,28 @@
   });
   sel.addEventListener('change',function(){state.team=this.value;render();});
   render();
+
+  // A database schedule, once one exists, replaces the built-in fixtures.
+  if(window.DSAPI && DSAPI.configured()){
+    DSAPI.listGames().then(function(rows){
+      if(!rows || !rows.length) return;
+      var byDate={},order=[];
+      rows.forEach(function(r){
+        if(!byDate[r.game_date]){byDate[r.game_date]=[];order.push(r.game_date);}
+        var h=parseInt(r.game_time.slice(0,2),10), m=r.game_time.slice(3,5);
+        var ap=h>=12?'PM':'AM', h12=h%12||12;
+        byDate[r.game_date].push({
+          id:r.id, gameId:r.legacy_id, time:h12+':'+m+' '+ap, date:r.game_date,
+          home:r.home_team, away:r.away_team, league:r.league,
+          venue:r.venue||DS.SEASON.venue, placeholder:false,
+          score: (r.home_score!=null&&r.away_score!=null)?{home:r.home_score,away:r.away_score}:null
+        });
+      });
+      order.sort();
+      SCHEDULE = order.map(function(d,i){ return {week:i+1,date:d,games:byDate[d]}; });
+      render();
+    }).catch(function(){ /* keep the built-in schedule */ });
+  }
 })();
 </script>
 </body>
