@@ -10,7 +10,7 @@
 
   var CDN = 'assets/logos/';
   var CDN2 = 'assets/Photos/';
-  var CHARITY_IMG = '/assets/charities/'; 
+  var CHARITY_IMG = 'assets/charities/'; 
 
   /* ---------- Teams ---------- */
   var TEAMS = [
@@ -358,7 +358,7 @@
   global.DS = {
     CDN: CDN,
     CDN2: CDN2,
-    LOGO: '/assets/logos/DurhamSoftball.jpg',
+    LOGO: 'assets/logos/DurhamSoftball.jpg',
     LOGO_FALLBACK: 'https://durhamsoftball.com/wp-content/uploads/2023/12/cropped-Durham-Softball-Logo-By-Play-NC.jpg',
     HERO_PHOTO: HERO_PHOTO,
     PHOTOS: PHOTOS,
