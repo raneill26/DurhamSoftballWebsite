@@ -177,11 +177,6 @@
         '<div class="gc-at"><span>at</span></div>'+
         teamRow(home,'home',hs,res&&hs>as,opts.records)+
       '</div>'+
-      (opts.compact?'':
-        '<div class="gc-foot">'+
-          '<span class="gc-note">'+ICONS.pin+esc(game.venue)+'</span>'+
-          '<span class="gc-note">'+game.league+' League</span>'+
-        '</div>')+
     '</article>';
   }
 
