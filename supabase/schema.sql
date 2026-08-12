@@ -1128,3 +1128,114 @@ grant execute on function team_roster(uuid, integer)  to anon;
 grant execute on function set_roster_order(uuid, uuid[]) to anon;
 
 notify pgrst, 'reload schema';
+
+-- ============================================================================
+-- PLAYER EDITING AND DEDUPLICATION
+--
+-- A player added by hand and the same person registering online produce two
+-- rows, because the upsert key is (email, season_id) and the manual row often
+-- has no email. These let the admin fix records in place and merge duplicates.
+-- ============================================================================
+
+-- Full edit by id. Unlike admin_save_player this never upserts on email, so
+-- correcting someone's address cannot silently collide into another row.
+create or replace function admin_update_player(
+  p_token uuid, p_id uuid, p_name text, p_email text, p_phone text,
+  p_shirt text, p_team text, p_preferred text)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+declare v_season text; v_clash uuid;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  if length(trim(coalesce(p_name,''))) < 2 then raise exception 'name required'; end if;
+
+  select season_id into v_season from players where id = p_id;
+  if v_season is null then raise exception 'player not found'; end if;
+
+  if nullif(trim(coalesce(p_email,'')),'') is not null then
+    select id into v_clash from players
+     where season_id = v_season and lower(email) = lower(trim(p_email)) and id <> p_id;
+    if v_clash is not null then
+      raise exception 'another player this season already uses that email. Merge them instead.';
+    end if;
+  end if;
+
+  update players set
+    full_name         = trim(p_name),
+    email             = lower(nullif(trim(coalesce(p_email,'')),'')),
+    phone             = nullif(trim(coalesce(p_phone,'')),''),
+    shirt_size        = nullif(trim(coalesce(p_shirt,'')),''),
+    team_id           = nullif(p_team,''),
+    preferred_team_id = nullif(p_preferred,'')
+  where id = p_id;
+end; $$;
+
+-- Record or clear a waiver on someone's behalf, for players entered by hand
+-- who signed on paper or in a previous system.
+create or replace function admin_set_waiver(p_token uuid, p_id uuid, p_signed boolean, p_note text default null)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+declare v_season text; v_name text;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  select season_id, full_name into v_season, v_name from players where id = p_id;
+  if v_season is null then raise exception 'player not found'; end if;
+
+  if p_signed then
+    insert into waivers (player_id, season_id, waiver_version, signed_name,
+                         agreed_text_hash, user_agent)
+    values (p_id, v_season, 'admin-recorded', v_name,
+            'recorded-by-admin', coalesce(p_note,'entered by league admin'))
+    on conflict (player_id, season_id) do nothing;
+  else
+    delete from waivers where player_id = p_id and season_id = v_season;
+  end if;
+end; $$;
+
+-- Fold a duplicate into the record you want to keep, then remove it.
+create or replace function admin_merge_players(p_token uuid, p_keep uuid, p_drop uuid)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+declare v_season text;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  if p_keep = p_drop then raise exception 'pick two different players'; end if;
+
+  select season_id into v_season from players where id = p_keep;
+  if v_season is null then raise exception 'player to keep not found'; end if;
+  if not exists (select 1 from players where id = p_drop and season_id = v_season) then
+    raise exception 'both players must be in the same season';
+  end if;
+
+  -- fill blanks on the kept record from the duplicate
+  update players k set
+    email             = coalesce(k.email, d.email),
+    phone             = coalesce(k.phone, d.phone),
+    shirt_size        = coalesce(k.shirt_size, d.shirt_size),
+    team_id           = coalesce(k.team_id, d.team_id),
+    preferred_team_id = coalesce(k.preferred_team_id, d.preferred_team_id),
+    roster_order      = coalesce(k.roster_order, d.roster_order)
+  from players d where k.id = p_keep and d.id = p_drop;
+
+  -- keep a waiver if either had one
+  insert into waivers (player_id, season_id, waiver_version, signed_name, agreed_text_hash, user_agent)
+  select p_keep, v_season, w.waiver_version, w.signed_name, w.agreed_text_hash, w.user_agent
+  from waivers w where w.player_id = p_drop
+  on conflict (player_id, season_id) do nothing;
+
+  -- keep a payment if either had one
+  update registrations r set status = 'paid'
+  where r.player_id = p_keep and r.season_id = v_season
+    and exists (select 1 from registrations d
+                where d.player_id = p_drop and d.season_id = v_season and d.status = 'paid');
+
+  -- move attendance across, skipping games the kept record already has
+  update attendance a set player_id = p_keep
+  where a.player_id = p_drop
+    and not exists (select 1 from attendance b where b.player_id = p_keep and b.game_id = a.game_id);
+
+  delete from players where id = p_drop;
+end; $$;
+
+grant execute on function admin_update_player(uuid, uuid, text, text, text, text, text, text) to anon;
+grant execute on function admin_set_waiver(uuid, uuid, boolean, text)                          to anon;
+grant execute on function admin_merge_players(uuid, uuid, uuid)                                to anon;
+
+notify pgrst, 'reload schema';

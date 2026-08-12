@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t512146">
+<link rel="stylesheet" href="assets/css/site.css?v=t513230">
 </head>
 <body>
 <div data-header=""></div>
@@ -26,10 +26,10 @@
 </main>
 
 <div data-footer></div>
-<script src="assets/js/config.js?v=t512146"></script>
-<script src="assets/js/data.js?v=t512146"></script>
-<script src="assets/js/api.js?v=t512146"></script>
-<script src="assets/js/site.js?v=t512146"></script>
+<script src="assets/js/config.js?v=t513230"></script>
+<script src="assets/js/data.js?v=t513230"></script>
+<script src="assets/js/api.js?v=t513230"></script>
+<script src="assets/js/site.js?v=t513230"></script>
 <script>
 (function(){
   var root=document.getElementById('admin-root');
@@ -75,7 +75,7 @@
   function shell(){
     root.innerHTML=
       '<div class="admin-tabs">'+
-        ['registration','partners','photos','schedule','results','rosters','champions','seasons','passcodes'].map(function(t){
+        ['registration','rosters','results','photos','champions','seasons','schedule','partners','passcodes'].map(function(t){
           return '<button data-tab="'+t+'" aria-selected="'+(t===tab)+'">'+t+'</button>';
         }).join('')+
         '<span style="margin-left:auto"></span>'+
@@ -354,47 +354,122 @@
 
   function teamName(id){ var t=DS.byId[id]; return t?t.short:(id||''); }
 
+  var regFilter = 'all';
+
   function loadRegs(){
     var host=document.getElementById('reg-table'); if(!host) return;
     DSAPI.registrations().then(function(rows){
       if(!rows.length){ host.innerHTML='<p class="muted">No sign-ups yet.</p>'; return; }
-      var assigned=rows.filter(function(r){return r.team_id;}).length;
-      host.innerHTML=
-        '<p class="muted" style="font-size:.85rem;margin-bottom:10px">'+rows.length+' registered, '+
-          assigned+' assigned to a team, '+(rows.length-assigned)+' waiting.</p>'+
-        '<table class="reg-table"><thead><tr>'+
-          '<th>Player</th><th>Preferred</th><th>Email</th><th>Phone</th>'+
-          '<th>Waiver</th><th>Shirt</th><th>Paid</th><th>Team assignment</th>'+
-        '</tr></thead><tbody>'+
-        rows.map(function(r){
-          return '<tr class="'+(r.team_id?'assigned':'')+'" data-p="'+r.player_id+'">'+
-            '<td><strong>'+DSUI.esc(r.full_name)+'</strong></td>'+
-            '<td>'+DSUI.esc(teamName(r.preferred_team_id)||'-')+'</td>'+
-            '<td>'+DSUI.esc(r.email||'')+'</td>'+
-            '<td>'+DSUI.esc(r.phone||'-')+'</td>'+
-            '<td class="'+(r.waiver_signed?'yes':'no')+'">'+(r.waiver_signed?'Yes':'No')+'</td>'+
-            '<td>'+DSUI.esc(r.shirt_size||'-')+'</td>'+
-            '<td><input type="checkbox" data-paid'+(r.paid?' checked':'')+'></td>'+
-            '<td><select data-assign>'+
-              '<option value="">Unassigned</option>'+
-              DS.activeTeams().slice().sort(function(a,b){return a.name.localeCompare(b.name);})
-                .map(function(t){return '<option value="'+t.id+'"'+(r.team_id===t.id?' selected':'')+'>'+
-                  DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('')+
-            '</select></td></tr>';
-        }).join('')+'</tbody></table>';
 
-      host.querySelectorAll('[data-assign]').forEach(function(sel){
-        sel.addEventListener('change',function(){
-          var row=sel.closest('tr');
-          DSAPI.assignTeam(row.getAttribute('data-p'), sel.value)
+      var teams = DS.activeTeams().slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+      function teamOpts(sel){
+        return '<option value="">Unassigned</option>'+teams.map(function(t){
+          return '<option value="'+t.id+'"'+(sel===t.id?' selected':'')+'>'+DSUI.esc(t.name)+'</option>';
+        }).join('');
+      }
+
+      var shown = rows.filter(function(r){
+        if(regFilter==='all') return true;
+        if(regFilter==='none') return !r.team_id;
+        return r.team_id===regFilter;
+      });
+      var assigned=rows.filter(function(r){return r.team_id;}).length;
+
+      host.innerHTML=
+        '<div class="toolbar" style="margin-bottom:12px">'+
+          '<select class="field" id="reg-filter">'+
+            '<option value="all"'+(regFilter==='all'?' selected':'')+'>All players ('+rows.length+')</option>'+
+            '<option value="none"'+(regFilter==='none'?' selected':'')+'>Not assigned ('+(rows.length-assigned)+')</option>'+
+            teams.map(function(t){
+              var n=rows.filter(function(r){return r.team_id===t.id;}).length;
+              return '<option value="'+t.id+'"'+(regFilter===t.id?' selected':'')+'>'+
+                     DSUI.esc(t.name)+' ('+n+')</option>';
+            }).join('')+
+          '</select>'+
+          '<span class="spacer"></span>'+
+          '<span class="muted" style="font-size:.85rem">'+shown.length+' shown &middot; '+
+            assigned+' of '+rows.length+' assigned</span>'+
+        '</div>'+
+        '<table class="reg-table"><thead><tr>'+
+          '<th>Player</th><th>Email</th><th>Phone</th><th>Shirt</th>'+
+          '<th>Waiver</th><th>Paid</th><th>Preferred</th><th>Team</th><th></th>'+
+        '</tr></thead><tbody>'+
+        shown.map(function(r){
+          return '<tr class="'+(r.team_id?'assigned':'')+'" data-p="'+r.player_id+'">'+
+            '<td><input type="text" data-name value="'+DSUI.esc(r.full_name)+'" style="width:150px"></td>'+
+            '<td><input type="text" data-email value="'+DSUI.esc(r.email||'')+'" style="width:190px"></td>'+
+            '<td><input type="text" data-phone value="'+DSUI.esc(r.phone||'')+'" style="width:110px"></td>'+
+            '<td><select data-shirt>'+['','XS','S','M','L','XL','2XL','3XL'].map(function(z){
+                  return '<option'+(r.shirt_size===z?' selected':'')+'>'+z+'</option>';}).join('')+'</select></td>'+
+            '<td><input type="checkbox" data-waiver'+(r.waiver_signed?' checked':'')+'></td>'+
+            '<td><input type="checkbox" data-paid'+(r.paid?' checked':'')+'></td>'+
+            '<td>'+DSUI.esc(teamName(r.preferred_team_id)||'-')+'</td>'+
+            '<td><select data-assign>'+teamOpts(r.team_id)+'</select></td>'+
+            '<td style="white-space:nowrap">'+
+              '<button class="btn btn-outline btn-sm" data-save>Save</button> '+
+              '<button class="btn btn-outline btn-sm" data-del style="color:var(--loss)">&times;</button>'+
+            '</td></tr>';
+        }).join('')+'</tbody></table>'+
+        '<div class="form-card" style="margin-top:20px">'+
+          '<h3 class="h-sm" style="margin-bottom:8px">Merge duplicates</h3>'+
+          '<p class="muted" style="font-size:.88rem;margin-bottom:12px">Someone entered by hand and '+
+          'again through registration shows up twice. Merge folds the duplicate into the record you '+
+          'keep: blanks are filled in, a waiver or payment on either is kept, attendance moves across, '+
+          'then the duplicate is deleted.</p>'+
+          '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">'+
+            '<div class="field-row" style="flex:1;min-width:200px;margin:0"><label>Keep</label>'+
+              '<select class="field" id="mkeep" style="width:100%">'+rows.map(function(r){
+                return '<option value="'+r.player_id+'">'+DSUI.esc(r.full_name)+
+                       (r.email?' ('+DSUI.esc(r.email)+')':' (no email)')+'</option>';}).join('')+'</select></div>'+
+            '<div class="field-row" style="flex:1;min-width:200px;margin:0"><label>Remove</label>'+
+              '<select class="field" id="mdrop" style="width:100%">'+rows.map(function(r){
+                return '<option value="'+r.player_id+'">'+DSUI.esc(r.full_name)+
+                       (r.email?' ('+DSUI.esc(r.email)+')':' (no email)')+'</option>';}).join('')+'</select></div>'+
+            '<button class="btn btn-primary btn-sm" id="mgo">Merge</button>'+
+          '</div><div id="mmsg" style="margin-top:12px"></div>'+
+        '</div>';
+
+      document.getElementById('reg-filter').addEventListener('change',function(){
+        regFilter=this.value; loadRegs();
+      });
+
+      document.getElementById('mgo').addEventListener('click',function(){
+        var keep=document.getElementById('mkeep').value, drop=document.getElementById('mdrop').value;
+        if(keep===drop) return setHTML('mmsg', msg('err','Pick two different people.'));
+        if(!confirm('Merge and delete the duplicate? This cannot be undone.')) return;
+        DSAPI.mergePlayers(keep,drop)
+          .then(function(){ loadRegs(); })
+          .catch(function(e){ setHTML('mmsg', msg('err',DSUI.esc(e.message))); });
+      });
+
+      host.querySelectorAll('tbody tr').forEach(function(row){
+        var id=row.getAttribute('data-p');
+        function val(sel){ var e=row.querySelector(sel); return e?e.value.trim():''; }
+
+        row.querySelector('[data-save]').addEventListener('click',function(){
+          var b=this; b.textContent='…';
+          DSAPI.updatePlayer({ id:id, full_name:val('[data-name]'), email:val('[data-email]'),
+              phone:val('[data-phone]'), shirt_size:val('[data-shirt]'),
+              team_id:val('[data-assign]') })
+            .then(function(){ b.textContent='Saved'; setTimeout(function(){b.textContent='Save';},1200); })
+            .catch(function(e){ b.textContent='Save'; alert(e.message); });
+        });
+        row.querySelector('[data-del]').addEventListener('click',function(){
+          if(confirm('Remove this player from the season?')) DSAPI.deletePlayer(id).then(loadRegs);
+        });
+        row.querySelector('[data-waiver]').addEventListener('change',function(){
+          var cb=this;
+          DSAPI.setWaiver(id, cb.checked).catch(function(e){ alert(e.message); cb.checked=!cb.checked; });
+        });
+        row.querySelector('[data-paid]').addEventListener('change',function(){
+          var cb=this;
+          DSAPI.setPaid(id, cb.checked).catch(function(e){ alert(e.message); cb.checked=!cb.checked; });
+        });
+        row.querySelector('[data-assign]').addEventListener('change',function(){
+          var sel=this;
+          DSAPI.assignTeam(id, sel.value)
             .then(function(){ row.className = sel.value?'assigned':''; })
             .catch(function(e){ alert(e.message); });
-        });
-      });
-      host.querySelectorAll('[data-paid]').forEach(function(cb){
-        cb.addEventListener('change',function(){
-          DSAPI.setPaid(cb.closest('tr').getAttribute('data-p'), cb.checked)
-            .catch(function(e){ alert(e.message); cb.checked=!cb.checked; });
         });
       });
     }).catch(function(e){ setHTML('reg-table', msg('err',DSUI.esc(e.message))); });
@@ -646,7 +721,10 @@
         '<option value="">Not assigned</option>'+teamOptions()+'</select></div>'+
       '<button class="btn btn-primary" id="padd">Add player</button>'+
       '<div id="pmsg" style="margin-top:12px"></div></div>'+
-      '<h2 class="h-sm" style="margin:28px 0 14px">Roster</h2><div id="plist2">Loading…</div>');
+      '<h2 class="h-sm" style="margin:28px 0 14px">Roster</h2>'+
+      '<div class="toolbar" style="margin-bottom:12px"><select class="field" id="ros-filter"></select>'+
+      '<span class="spacer"></span><span class="muted" id="ros-count" style="font-size:.85rem"></span></div>'+
+      '<div id="plist2">Loading…</div>');
 
     document.getElementById('padd').addEventListener('click',function(){
       var n=document.getElementById('pn').value.trim();
@@ -660,10 +738,36 @@
     loadRoster();
   }
 
+  var rosFilter='all';
+
   function loadRoster(){
     var host=document.getElementById('plist2'); if(!host) return;
     DSAPI.listPlayers().then(function(rows){
       if(!rows.length){ host.innerHTML='<p class="muted">No players registered yet.</p>'; return; }
+
+      var teams=DS.activeTeams().slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+      var fsel=document.getElementById('ros-filter');
+      if(fsel && !fsel.dataset.built){
+        fsel.innerHTML='<option value="all">All players ('+rows.length+')</option>'+
+          '<option value="none">Not assigned ('+rows.filter(function(r){return !r.team_id;}).length+')</option>'+
+          teams.map(function(t){
+            var n=rows.filter(function(r){return r.team_id===t.id;}).length;
+            return '<option value="'+t.id+'">'+DSUI.esc(t.name)+' ('+n+')</option>';
+          }).join('');
+        fsel.value=rosFilter;
+        fsel.dataset.built='1';
+        fsel.addEventListener('change',function(){ rosFilter=this.value; loadRoster(); });
+      }
+
+      rows = rows.filter(function(r){
+        if(rosFilter==='all') return true;
+        if(rosFilter==='none') return !r.team_id;
+        return r.team_id===rosFilter;
+      });
+      var cnt=document.getElementById('ros-count');
+      if(cnt) cnt.textContent=rows.length+' shown';
+      if(!rows.length){ host.innerHTML='<p class="muted">Nobody matches that filter.</p>'; return; }
+
       host.innerHTML=rows.map(function(p){
         return '<div class="admin-item" data-id="'+p.id+'"><div></div>'+
           '<div class="meta"><b>'+DSUI.esc(p.full_name)+

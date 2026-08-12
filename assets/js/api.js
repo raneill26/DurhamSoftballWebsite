@@ -152,6 +152,18 @@
         p_season: season || cfg.CURRENT_SEASON, p_confirm: confirm });
     },
 
+    updatePlayer: function (p) {
+      return rpc('admin_update_player', { p_token: adminToken(), p_id: p.id, p_name: p.full_name,
+        p_email: p.email || '', p_phone: p.phone || '', p_shirt: p.shirt_size || '',
+        p_team: p.team_id || '', p_preferred: p.preferred_team_id || '' });
+    },
+    setWaiver: function (id, signed) {
+      return rpc('admin_set_waiver', { p_token: adminToken(), p_id: id, p_signed: !!signed });
+    },
+    mergePlayers: function (keepId, dropId) {
+      return rpc('admin_merge_players', { p_token: adminToken(), p_keep: keepId, p_drop: dropId });
+    },
+
     /* ---- organizations ---- */
     listOrgs: function (season) { return rpc('list_organizations', { p_season: season || null }); },
     saveOrg: function (o) {
