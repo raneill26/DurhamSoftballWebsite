@@ -113,6 +113,21 @@ Once organizations exist in the database they replace the built-in list in `data
 Non-Profit Partners page, Current Teams, the charity pages and the homepage spotlight. With no
 database connected the site falls back to `data.js`, so it never breaks.
 
+## 5a. Registration window
+
+The **Registration** tab has a switch. Open means the register page takes sign-ups. Closed replaces
+the whole form with the message you set there, which ships pre-filled with the Summer 2026 wording.
+
+Registration defaults to **closed** after you run the schema, so nothing goes live by accident.
+
+Players choose a **preferred team**, not a placement, and are not added to any roster automatically.
+They appear in the Registration table with their preference, email, phone, waiver status, shirt size
+and payment, and only join a team when you pick one in the assignment column.
+
+**Clear the player base** at the bottom of that tab wipes every player in the live season along with
+their waivers, payments and attendance. Teams, fixtures and results are untouched. It asks you to
+type CLEAR.
+
 ## 5b. The admin page
 
 `admin.html` lets the owner run the league without touching code. Set the passcode once from the

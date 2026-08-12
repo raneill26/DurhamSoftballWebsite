@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t503041">
+<link rel="stylesheet" href="assets/css/site.css?v=t506344">
 <title>Photos | Durham Softball</title>
 <meta name="description" content="Game day photos from sixteen seasons of Durham Softball at Pineywood Park.">
 </head>
@@ -36,10 +36,10 @@
   </div>
 </main>
 <div data-footer></div>
-<script src="assets/js/config.js?v=t503041"></script>
-<script src="assets/js/data.js?v=t503041"></script>
-<script src="assets/js/api.js?v=t503041"></script>
-<script src="assets/js/site.js?v=t503041"></script>
+<script src="assets/js/config.js?v=t506344"></script>
+<script src="assets/js/data.js?v=t506344"></script>
+<script src="assets/js/api.js?v=t506344"></script>
+<script src="assets/js/site.js?v=t506344"></script>
 <script>
 (function(){
   var PHOTOS=DS.PHOTOS, SEASONS=DS.PHOTO_SEASONS;
@@ -57,7 +57,7 @@
       ? DSUI.photoBand(list,{allowWide:true})
       : '<p class="center muted" style="grid-column:1/-1;padding:50px 0">No photos filed under that season yet.</p>';
     document.getElementById('gallery-note').textContent =
-      list.length+' photo'+(list.length===1?'':'s')+'. Season tags come from the league\'s own file names, so a few may need correcting.';
+      list.length+' photo'+(list.length===1?'':'s')+'.';
   }
   function fillSeasons(){
     sel.innerHTML='<option value="all">All photos</option>'+

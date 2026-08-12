@@ -118,6 +118,34 @@
 
     listSeasons: function () { return rpc('list_seasons', {}); },
 
+    /* ---- settings ---- */
+    getSettings: function () {
+      return rpc('get_settings', {}).then(function (rows) {
+        var out = {};
+        (rows || []).forEach(function (r) { out[r.key] = r.value; });
+        return out;
+      });
+    },
+    setSetting: function (k, v) {
+      return rpc('admin_set_setting', { p_token: adminToken(), p_key: k, p_value: v });
+    },
+
+    /* ---- registration intake ---- */
+    registrations: function (season) {
+      return rpc('admin_registrations', { p_token: adminToken(), p_season: season || cfg.CURRENT_SEASON });
+    },
+    assignTeam: function (playerId, teamId) {
+      return rpc('admin_assign_team', { p_token: adminToken(), p_player: playerId, p_team: teamId || '' });
+    },
+    setPaid: function (playerId, paid, season) {
+      return rpc('admin_set_paid', { p_token: adminToken(), p_player: playerId,
+        p_season: season || cfg.CURRENT_SEASON, p_paid: !!paid });
+    },
+    clearPlayers: function (season, confirm) {
+      return rpc('admin_clear_players', { p_token: adminToken(),
+        p_season: season || cfg.CURRENT_SEASON, p_confirm: confirm });
+    },
+
     /* ---- organizations ---- */
     listOrgs: function (season) { return rpc('list_organizations', { p_season: season || null }); },
     saveOrg: function (o) {
@@ -205,7 +233,8 @@
           p_team_id: data.teamId || null,
           p_waiver_version: cfg.WAIVER_VERSION, p_signed_name: data.signedName,
           p_agreed_hash: hash, p_user_agent: navigator.userAgent,
-          p_signature_image: data.signatureImage || null
+          p_signature_image: data.signatureImage || null,
+          p_shirt_size: data.shirtSize || null
         });
       });
     }

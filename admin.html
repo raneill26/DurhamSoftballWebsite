@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t503041">
+<link rel="stylesheet" href="assets/css/site.css?v=t506344">
 </head>
 <body>
 <div data-header=""></div>
@@ -26,14 +26,14 @@
 </main>
 
 <div data-footer></div>
-<script src="assets/js/config.js?v=t503041"></script>
-<script src="assets/js/data.js?v=t503041"></script>
-<script src="assets/js/api.js?v=t503041"></script>
-<script src="assets/js/site.js?v=t503041"></script>
+<script src="assets/js/config.js?v=t506344"></script>
+<script src="assets/js/data.js?v=t506344"></script>
+<script src="assets/js/api.js?v=t506344"></script>
+<script src="assets/js/site.js?v=t506344"></script>
 <script>
 (function(){
   var root=document.getElementById('admin-root');
-  var tab='partners';
+  var tab='registration';
 
   function msg(kind,text){
     return '<div class="form-msg '+kind+'">'+text+'</div>';
@@ -71,7 +71,7 @@
   function shell(){
     root.innerHTML=
       '<div class="admin-tabs">'+
-        ['partners','photos','schedule','results','rosters','champions','seasons','passcodes'].map(function(t){
+        ['registration','partners','photos','schedule','results','rosters','champions','seasons','passcodes'].map(function(t){
           return '<button data-tab="'+t+'" aria-selected="'+(t===tab)+'">'+t+'</button>';
         }).join('')+
         '<span style="margin-left:auto"></span>'+
@@ -85,8 +85,9 @@
         tab=t; shell();
       });
     });
-    ({partners:partnersPanel,photos:photosPanel,schedule:schedulePanel,results:resultsPanel,
-      rosters:rostersPanel,champions:champsPanel,seasons:seasonsPanel,passcodes:passPanel})[tab]();
+    ({registration:registrationPanel,partners:partnersPanel,photos:photosPanel,schedule:schedulePanel,
+      results:resultsPanel,rosters:rostersPanel,champions:champsPanel,seasons:seasonsPanel,
+      passcodes:passPanel})[tab]();
   }
 
   function panel(html){ setHTML('panel', html); }
@@ -283,6 +284,118 @@
           .catch(function(e){ b.textContent='Set'; alert(e.message); });
       });
     });
+  }
+
+  /* ---------------- registration ---------------- */
+  function registrationPanel(){
+    panel('<div id="reg-toggle">Loading…</div>'+
+      '<h2 class="h-sm" style="margin:26px 0 12px">Sign-ups</h2>'+
+      '<p class="muted" style="font-size:.9rem;margin-bottom:14px">Players pick a preferred team when '+
+      'they register. They only join a roster once you assign them here.</p>'+
+      '<div style="overflow-x:auto"><div id="reg-table">Loading…</div></div>'+
+      '<div class="form-card" style="margin-top:26px;border-color:#E8C9C5">'+
+        '<h3 class="h-sm" style="margin-bottom:8px">Clear the player base</h3>'+
+        '<p class="muted" style="font-size:.9rem;margin-bottom:14px">Wipes every player in the live '+
+        'season, along with their waivers, payments and attendance. Use this between seasons. '+
+        'Teams, fixtures and results are untouched.</p>'+
+        '<div class="field-row"><label>Type CLEAR to confirm</label><input type="text" id="clr"></div>'+
+        '<button class="btn btn-outline btn-sm" id="clrgo" style="color:var(--loss)">Clear players</button>'+
+        '<div id="clrmsg" style="margin-top:12px"></div>'+
+      '</div>');
+
+    document.getElementById('clrgo').addEventListener('click',function(){
+      var v=document.getElementById('clr').value.trim();
+      if(v!=='CLEAR') return setHTML('clrmsg', msg('err','Type CLEAR exactly to confirm.'));
+      if(!confirm('Delete every player in the live season? This cannot be undone.')) return;
+      DSAPI.clearPlayers(null,v)
+        .then(function(n){ setHTML('clrmsg', msg('ok',n+' players removed.')); loadRegs(); })
+        .catch(function(e){ setHTML('clrmsg', msg('err',DSUI.esc(e.message))); });
+    });
+
+    loadRegToggle();
+    loadRegs();
+  }
+
+  function loadRegToggle(){
+    DSAPI.getSettings().then(function(cfg){
+      var open = cfg.registration_open === 'true';
+      setHTML('reg-toggle',
+        '<div class="toggle-row">'+
+          '<label class="switch"><input type="checkbox" id="regopen"'+(open?' checked':'')+'><span></span></label>'+
+          '<div><b>Registration '+(open?'open':'closed')+'</b>'+
+          '<div class="muted" style="font-size:.85rem">'+
+            (open?'The register page is live and accepting sign-ups.'
+                 :'The register page shows the message below instead of the form.')+'</div></div>'+
+        '</div>'+
+        '<div class="form-card"><div class="field-row">'+
+          '<label>Closed message</label>'+
+          '<textarea id="regmsg" rows="7" style="width:100%;border:1px solid var(--line-2);'+
+            'border-radius:var(--r-sm);padding:12px 14px;font-family:var(--body);font-size:1rem;'+
+            'color:var(--text)">'+DSUI.esc(cfg.registration_closed_message||'')+'</textarea>'+
+          '<div class="hint">Blank lines start a new paragraph.</div></div>'+
+          '<button class="btn btn-primary btn-sm" id="regsave">Save message</button>'+
+          '<div id="regsmsg" style="margin-top:12px"></div></div>');
+
+      document.getElementById('regopen').addEventListener('change',function(){
+        var on=this.checked;
+        DSAPI.setSetting('registration_open', on?'true':'false')
+          .then(loadRegToggle)
+          .catch(function(e){ alert(e.message); });
+      });
+      document.getElementById('regsave').addEventListener('click',function(){
+        DSAPI.setSetting('registration_closed_message', document.getElementById('regmsg').value)
+          .then(function(){ setHTML('regsmsg', msg('ok','Saved.')); })
+          .catch(function(e){ setHTML('regsmsg', msg('err',DSUI.esc(e.message))); });
+      });
+    }).catch(function(e){ setHTML('reg-toggle', msg('err',DSUI.esc(e.message))); });
+  }
+
+  function teamName(id){ var t=DS.byId[id]; return t?t.short:(id||''); }
+
+  function loadRegs(){
+    var host=document.getElementById('reg-table'); if(!host) return;
+    DSAPI.registrations().then(function(rows){
+      if(!rows.length){ host.innerHTML='<p class="muted">No sign-ups yet.</p>'; return; }
+      var assigned=rows.filter(function(r){return r.team_id;}).length;
+      host.innerHTML=
+        '<p class="muted" style="font-size:.85rem;margin-bottom:10px">'+rows.length+' registered, '+
+          assigned+' assigned to a team, '+(rows.length-assigned)+' waiting.</p>'+
+        '<table class="reg-table"><thead><tr>'+
+          '<th>Player</th><th>Preferred</th><th>Email</th><th>Phone</th>'+
+          '<th>Waiver</th><th>Shirt</th><th>Paid</th><th>Team assignment</th>'+
+        '</tr></thead><tbody>'+
+        rows.map(function(r){
+          return '<tr class="'+(r.team_id?'assigned':'')+'" data-p="'+r.player_id+'">'+
+            '<td><strong>'+DSUI.esc(r.full_name)+'</strong></td>'+
+            '<td>'+DSUI.esc(teamName(r.preferred_team_id)||'-')+'</td>'+
+            '<td>'+DSUI.esc(r.email||'')+'</td>'+
+            '<td>'+DSUI.esc(r.phone||'-')+'</td>'+
+            '<td class="'+(r.waiver_signed?'yes':'no')+'">'+(r.waiver_signed?'Yes':'No')+'</td>'+
+            '<td>'+DSUI.esc(r.shirt_size||'-')+'</td>'+
+            '<td><input type="checkbox" data-paid'+(r.paid?' checked':'')+'></td>'+
+            '<td><select data-assign>'+
+              '<option value="">Unassigned</option>'+
+              DS.activeTeams().slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+                .map(function(t){return '<option value="'+t.id+'"'+(r.team_id===t.id?' selected':'')+'>'+
+                  DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('')+
+            '</select></td></tr>';
+        }).join('')+'</tbody></table>';
+
+      host.querySelectorAll('[data-assign]').forEach(function(sel){
+        sel.addEventListener('change',function(){
+          var row=sel.closest('tr');
+          DSAPI.assignTeam(row.getAttribute('data-p'), sel.value)
+            .then(function(){ row.className = sel.value?'assigned':''; })
+            .catch(function(e){ alert(e.message); });
+        });
+      });
+      host.querySelectorAll('[data-paid]').forEach(function(cb){
+        cb.addEventListener('change',function(){
+          DSAPI.setPaid(cb.closest('tr').getAttribute('data-p'), cb.checked)
+            .catch(function(e){ alert(e.message); cb.checked=!cb.checked; });
+        });
+      });
+    }).catch(function(e){ setHTML('reg-table', msg('err',DSUI.esc(e.message))); });
   }
 
   /* ---------------- partners / organizations ---------------- */

@@ -745,3 +745,131 @@ end; $$;
 grant execute on function list_organizations(text) to anon;
 grant execute on function admin_save_org(uuid, text, text, text, text, text, text, text, text, text, text, text) to anon;
 grant execute on function admin_delete_org(uuid, text) to anon;
+
+-- ============================================================================
+-- REGISTRATION WINDOW + INTAKE
+-- ============================================================================
+
+create table if not exists site_settings (
+  key   text primary key,
+  value text
+);
+alter table site_settings enable row level security;
+
+insert into site_settings (key, value) values
+  ('registration_open','false'),
+  ('registration_closed_message',
+   'Registration for Summer 2026 has now closed. We ended up with 20 teams and more than 350 players on a roster!' || chr(10) || chr(10) ||
+   'Our next season starts in March, registration starts in January! Email playncinc@gmail.com to get added to our newsletter for reminders!' || chr(10) || chr(10) ||
+   'Thank you!')
+on conflict (key) do nothing;
+
+create or replace function get_settings()
+returns table (key text, value text)
+language sql security definer set search_path = public as $$
+  select s.key, s.value from site_settings s;
+$$;
+
+create or replace function admin_set_setting(p_token uuid, p_key text, p_value text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  insert into site_settings (key, value) values (p_key, p_value)
+  on conflict (key) do update set value = excluded.value;
+end; $$;
+
+-- Intake fields. team_id stays null until an admin assigns it.
+alter table players add column if not exists shirt_size        text;
+alter table players add column if not exists preferred_team_id text;
+
+-- Registration now records a preference, never a roster placement.
+create or replace function register_player(
+  p_season text, p_full_name text, p_email text, p_phone text, p_team_id text,
+  p_waiver_version text, p_signed_name text, p_agreed_hash text, p_user_agent text,
+  p_signature_image text default null, p_shirt_size text default null)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_player uuid;
+begin
+  if coalesce((select value from site_settings where key='registration_open'),'false') <> 'true' then
+    raise exception 'registration is closed';
+  end if;
+  if length(trim(p_full_name)) < 2 then raise exception 'name required'; end if;
+  if p_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'valid email required'; end if;
+  if length(trim(p_signed_name)) < 2 then raise exception 'signature required'; end if;
+
+  insert into players (full_name, email, phone, preferred_team_id, shirt_size, season_id)
+  values (trim(p_full_name), lower(trim(p_email)), p_phone,
+          nullif(p_team_id,''), nullif(p_shirt_size,''), p_season)
+  on conflict (email, season_id) do update
+    set full_name = excluded.full_name, phone = excluded.phone,
+        preferred_team_id = excluded.preferred_team_id, shirt_size = excluded.shirt_size
+  returning id into v_player;
+
+  insert into waivers (player_id, season_id, waiver_version, signed_name, agreed_text_hash,
+                       user_agent, signature_image)
+  values (v_player, p_season, p_waiver_version, trim(p_signed_name), p_agreed_hash,
+          p_user_agent, p_signature_image)
+  on conflict (player_id, season_id) do nothing;
+
+  insert into registrations (player_id, season_id, status)
+  values (v_player, p_season, 'pending')
+  on conflict (player_id, season_id) do nothing;
+
+  return v_player;
+end; $$;
+
+-- The intake table the admin works from.
+create or replace function admin_registrations(p_token uuid, p_season text)
+returns table (player_id uuid, full_name text, email text, phone text,
+               preferred_team_id text, shirt_size text, waiver_signed boolean,
+               paid boolean, team_id text)
+language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  return query
+    select p.id, p.full_name, p.email, p.phone, p.preferred_team_id, p.shirt_size,
+           exists (select 1 from waivers w where w.player_id = p.id and w.season_id = p.season_id),
+           coalesce((select r.status = 'paid' from registrations r
+                      where r.player_id = p.id and r.season_id = p.season_id), false),
+           p.team_id
+    from players p where p.season_id = p_season
+    order by (p.team_id is not null), p.full_name;
+end; $$;
+
+create or replace function admin_assign_team(p_token uuid, p_player uuid, p_team text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  update players set team_id = nullif(p_team,'') where id = p_player;
+end; $$;
+
+create or replace function admin_set_paid(p_token uuid, p_player uuid, p_season text, p_paid boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  insert into registrations (player_id, season_id, status)
+  values (p_player, p_season, case when p_paid then 'paid' else 'pending' end)
+  on conflict (player_id, season_id) do update
+    set status = case when p_paid then 'paid' else 'pending' end;
+end; $$;
+
+-- Wipe the player base between seasons. Waivers, registrations and attendance
+-- cascade from players, so this clears the lot for that season.
+create or replace function admin_clear_players(p_token uuid, p_season text, p_confirm text)
+returns integer language plpgsql security definer set search_path = public as $$
+declare n integer;
+begin
+  if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
+  if p_confirm <> 'CLEAR' then raise exception 'confirmation phrase did not match'; end if;
+  select count(*) into n from players where season_id = p_season;
+  delete from players where season_id = p_season;
+  return n;
+end; $$;
+
+grant execute on function get_settings()                                  to anon;
+grant execute on function admin_set_setting(uuid, text, text)             to anon;
+grant execute on function admin_registrations(uuid, text)                 to anon;
+grant execute on function admin_assign_team(uuid, uuid, text)             to anon;
+grant execute on function admin_set_paid(uuid, uuid, text, boolean)       to anon;
+grant execute on function admin_clear_players(uuid, text, text)           to anon;
+grant execute on function register_player(text, text, text, text, text, text, text, text, text, text, text) to anon;

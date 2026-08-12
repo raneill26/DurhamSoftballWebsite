@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t503041">
+<link rel="stylesheet" href="assets/css/site.css?v=t506344">
 </head>
 <body>
 <div data-header="register.html"></div>
@@ -32,6 +32,7 @@
     </div>
 
     <div id="config-warning"></div>
+    <div id="reg-closed" class="hide"></div>
 
     <form class="form-card" id="reg-form" novalidate>
       <div id="msg"></div>
@@ -52,9 +53,18 @@
         <div class="hint">Only used for same-day rainout texts.</div>
       </div>
       <div class="field-row">
-        <label for="teamId">2026 team assignment</label>
-        <select class="field" id="teamId" style="width:100%" required></select>
-        <div class="hint">If you have not been placed on a team yet, choose Not assigned yet and the league will slot you in.</div>
+        <label for="teamId">Preferred team</label>
+        <select class="field" id="teamId" style="width:100%"></select>
+        <div class="hint">A preference, not a placement. The league balances teams and will confirm where you end up.</div>
+      </div>
+      <div class="field-row">
+        <label for="shirtSize">Shirt size</label>
+        <select class="field" id="shirtSize" style="width:100%" required>
+          <option value="">Choose a size</option>
+          <option>XS</option><option>S</option><option>M</option><option>L</option>
+          <option>XL</option><option>2XL</option><option>3XL</option>
+        </select>
+        <div class="hint">Every player gets a custom jersey.</div>
       </div>
 
       <h2 class="h-sm" style="margin:30px 0 14px">Liability waiver</h2>
@@ -124,11 +134,11 @@
 </main>
 
 <div data-footer></div>
-<script src="assets/js/config.js?v=t503041"></script>
-<script src="assets/js/data.js?v=t503041"></script>
-<script src="assets/js/api.js?v=t503041"></script>
-<script src="assets/js/site.js?v=t503041"></script>
-<script src="assets/js/waiver.js?v=t503041"></script>
+<script src="assets/js/config.js?v=t506344"></script>
+<script src="assets/js/data.js?v=t506344"></script>
+<script src="assets/js/api.js?v=t506344"></script>
+<script src="assets/js/site.js?v=t506344"></script>
+<script src="assets/js/waiver.js?v=t506344"></script>
 <script>
 (function(){
   var form=document.getElementById('reg-form');
@@ -145,8 +155,8 @@
 
   // team dropdown from the live 2026 roster
   var teamSel=document.getElementById('teamId');
-  teamSel.innerHTML='<option value="">Not assigned yet</option>'+
-    DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+  teamSel.innerHTML='<option value="">No preference</option>'+
+    DS.activeTeams().slice().sort(function(a,b){return a.name.localeCompare(b.name);})
       .map(function(t){return '<option value="'+t.id+'">'+DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('');
 
   /* ---------------- signature pad ---------------- */
@@ -215,6 +225,28 @@
   document.getElementById('sig-date').textContent =
     'Signing as of ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
+  // Registration window. Closed replaces the whole form with the league's message.
+  function showClosed(text){
+    document.getElementById('reg-form').classList.add('hide');
+    document.querySelector('.steps').classList.add('hide');
+    var box=document.getElementById('reg-closed');
+    box.classList.remove('hide');
+    box.innerHTML='<div class="form-card"><h2 class="h-sm" style="margin-bottom:14px">Registration is closed</h2>'+
+      '<div class="prose">'+String(text||'').split(/\n{2,}/).map(function(p){
+        return '<p>'+DSUI.esc(p.trim())+'</p>';
+      }).join('')+'</div>'+
+      '<div class="btn-row" style="margin-top:22px">'+
+        '<a class="btn btn-primary" href="mailto:playncinc@gmail.com?subject=Add%20me%20to%20the%20Durham%20Softball%20newsletter">Join the newsletter</a>'+
+        '<a class="btn btn-outline" href="teams.html">See the charities</a>'+
+      '</div></div>';
+  }
+
+  if(DSAPI.configured()){
+    DSAPI.getSettings().then(function(cfg){
+      if(cfg.registration_open !== 'true') showClosed(cfg.registration_closed_message);
+    }).catch(function(){ /* leave the form up if settings cannot be read */ });
+  }
+
   if(!DSAPI.configured()){
     document.getElementById('config-warning').innerHTML =
       '<div class="form-msg warn"><strong>Not connected yet.</strong> '+
@@ -233,6 +265,7 @@
       phone:document.getElementById('phone').value.trim(),
       signedName:document.getElementById('signedName').value.trim(),
       teamId:document.getElementById('teamId').value||null,
+      shirtSize:document.getElementById('shirtSize').value||null,
       signatureImage:null
     };
 
@@ -250,6 +283,7 @@
     var unchecked=[].slice.call(document.querySelectorAll('[data-clause]')).filter(function(c){return !c.checked;});
     if(unchecked.length) return show('err','You must agree to every statement in the waiver. '+
       unchecked.length+' still unchecked.');
+    if(!data.shirtSize) return show('err','Pick a shirt size.');
     if(!document.getElementById('agree18').checked)
       return show('err','You must confirm you are 18 or older and signing for yourself.');
     if(data.signedName.length<2) return show('err','Confirm your full name under the signature.');
@@ -276,7 +310,29 @@
       window.scrollTo({top:0,behavior:'smooth'});
     }
 
-    if(!DSAPI.configured()){ setTimeout(function(){ finish(false); },400); return; }
+    // Registration window. Closed replaces the whole form with the league's message.
+  function showClosed(text){
+    document.getElementById('reg-form').classList.add('hide');
+    document.querySelector('.steps').classList.add('hide');
+    var box=document.getElementById('reg-closed');
+    box.classList.remove('hide');
+    box.innerHTML='<div class="form-card"><h2 class="h-sm" style="margin-bottom:14px">Registration is closed</h2>'+
+      '<div class="prose">'+String(text||'').split(/\n{2,}/).map(function(p){
+        return '<p>'+DSUI.esc(p.trim())+'</p>';
+      }).join('')+'</div>'+
+      '<div class="btn-row" style="margin-top:22px">'+
+        '<a class="btn btn-primary" href="mailto:playncinc@gmail.com?subject=Add%20me%20to%20the%20Durham%20Softball%20newsletter">Join the newsletter</a>'+
+        '<a class="btn btn-outline" href="teams.html">See the charities</a>'+
+      '</div></div>';
+  }
+
+  if(DSAPI.configured()){
+    DSAPI.getSettings().then(function(cfg){
+      if(cfg.registration_open !== 'true') showClosed(cfg.registration_closed_message);
+    }).catch(function(){ /* leave the form up if settings cannot be read */ });
+  }
+
+  if(!DSAPI.configured()){ setTimeout(function(){ finish(false); },400); return; }
 
     DSAPI.registerPlayer(data, DS_WAIVER.text)
       .then(function(){ finish(true); })
