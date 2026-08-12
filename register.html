@@ -50,12 +50,11 @@
       <div class="field-row">
         <label for="phone">Mobile number (optional)</label>
         <input type="tel" id="phone" name="phone" autocomplete="tel">
-        <div class="hint">Only used for same-day rainout texts.</div>
       </div>
       <div class="field-row">
         <label for="teamId">Preferred team</label>
         <select class="field" id="teamId" style="width:100%"></select>
-        <div class="hint">A preference, not a placement. The league balances teams and will confirm where you end up.</div>
+        <div class="hint">The league balances teams and will confirm where you end up.</div>
       </div>
       <div class="field-row">
         <label for="shirtSize">Shirt size</label>
@@ -155,7 +154,7 @@
 
   // team dropdown from the live 2026 roster
   var teamSel=document.getElementById('teamId');
-  teamSel.innerHTML='<option value="">No preference</option>'+
+  teamSel.innerHTML='<option value="">Free Agent</option>'+
     DS.activeTeams().slice().sort(function(a,b){return a.name.localeCompare(b.name);})
       .map(function(t){return '<option value="'+t.id+'">'+DSUI.esc(t.name)+' ('+t.league+')</option>';}).join('');
 

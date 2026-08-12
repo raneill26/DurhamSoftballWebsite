@@ -246,7 +246,7 @@
       '<div class="standings-cards">'+cards+'</div>'+
       '<div class="table-foot">'+
         '<span class="key"><strong>GP</strong> games played</span>'+
-        '<span class="key"><strong>PCT</strong> win pct (ties = &frac12;)</span>'+
+        '<span class="key"><strong>PCT</strong> win pct</span>'+
         '<span class="key"><strong>RS/RA</strong> runs scored / allowed</span>'+
         '<span class="key">Dashed line = '+(cut?'top-'+cut+' advance to the tournament':'playoff cut')+'</span>'+
       '</div></div>';
