@@ -12,6 +12,68 @@
 
 create extension if not exists pgcrypto;
 
+-- ============================================================================
+-- IDEMPOTENT RESET
+-- Postgres treats a changed argument list as a NEW function, so re-running this
+-- file after a signature change would leave duplicate overloads behind and
+-- PostgREST would refuse to choose between them. Drop every overload of our
+-- own functions first, then recreate them below.
+-- Tables and data are untouched.
+-- ============================================================================
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in ('admin_assign_team',
+        'admin_clear_players',
+        'admin_delete_champion',
+        'admin_delete_game',
+        'admin_delete_org',
+        'admin_delete_photo',
+        'admin_delete_player',
+        'admin_generate_schedule',
+        'admin_list_players',
+        'admin_login',
+        'admin_new_season',
+        'admin_registrations',
+        'admin_save_champion',
+        'admin_save_game',
+        'admin_save_org',
+        'admin_save_photo',
+        'admin_save_player',
+        'admin_set_current_season',
+        'admin_set_paid',
+        'admin_set_photo_placement',
+        'admin_set_score',
+        'admin_set_setting',
+        'admin_set_team_passcode',
+        'get_settings',
+        'is_admin',
+        'list_champions',
+        'list_games',
+        'list_organizations',
+        'list_photos',
+        'list_photos_by_placement',
+        'list_players',
+        'list_seasons',
+        'mark_attendance',
+        'public_teams',
+        'register_player',
+        'session_team',
+        'set_admin_passcode',
+        'set_team_passcode',
+        'team_login',
+        'team_roster')
+  loop
+    execute 'drop function if exists ' || r.sig;
+  end loop;
+end $$;
+
+
 create table if not exists seasons (
   id          text primary key,
   label       text not null,
@@ -161,58 +223,14 @@ begin
 end; $$;
 
 -- ---------------------------------------------------------------- registration
-create or replace function register_player(
-  p_season text, p_full_name text, p_email text, p_phone text, p_team_id text,
-  p_waiver_version text, p_signed_name text, p_agreed_hash text, p_user_agent text,
-  p_signature_image text default null)
-returns uuid language plpgsql security definer set search_path = public, extensions as $$
-declare v_player uuid;
-begin
-  if length(trim(p_full_name)) < 2 then raise exception 'name required'; end if;
-  if p_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'valid email required'; end if;
-  if length(trim(p_signed_name)) < 2 then raise exception 'signature required'; end if;
-
-  if p_team_id is not null and not exists (
-       select 1 from teams where id = p_team_id and season_id = p_season) then
-    raise exception 'unknown team for this season';
-  end if;
-
-  insert into players (full_name, email, phone, team_id, season_id)
-  values (trim(p_full_name), lower(trim(p_email)), p_phone, p_team_id, p_season)
-  on conflict (email, season_id) do update
-    set full_name = excluded.full_name, phone = excluded.phone, team_id = excluded.team_id
-  returning id into v_player;
-
-  insert into waivers (player_id, season_id, waiver_version, signed_name, agreed_text_hash,
-                       user_agent, signature_image)
-  values (v_player, p_season, p_waiver_version, trim(p_signed_name), p_agreed_hash,
-          p_user_agent, p_signature_image)
-  on conflict (player_id, season_id) do nothing;
-
-  insert into registrations (player_id, season_id, status)
-  values (v_player, p_season, 'pending')
-  on conflict (player_id, season_id) do nothing;
-
-  return v_player;
-end; $$;
 
 -- ---------------------------------------------------------------- grants
-revoke all on all tables in schema public from anon;
-grant execute on function public_teams(text)         to anon;
-grant execute on function team_login(text, text)     to anon;
-grant execute on function team_roster(uuid, integer) to anon;
-grant execute on function mark_attendance(uuid, integer, uuid, text, text) to anon;
-grant execute on function register_player(text, text, text, text, text, text, text, text, text, text) to anon;
-revoke execute on function session_team(uuid) from anon;
-
 -- ---------------------------------------------------------------- admin only
 -- Run from the SQL editor:  select set_team_passcode('alp416', 'legion2026');
 create or replace function set_team_passcode(p_team_id text, p_passcode text)
 returns void language sql security definer set search_path = public, extensions as $$
   update teams set passcode_hash = crypt(p_passcode, gen_salt('bf', 10)) where id = p_team_id;
 $$;
-revoke execute on function set_team_passcode(text, text) from anon;
-
 -- ============================================================================
 -- ADMIN
 -- Lets the league owner manage photos and roll the season over without code.
@@ -261,8 +279,6 @@ create or replace function set_admin_passcode(p_passcode text)
 returns void language sql security definer set search_path = public, extensions as $$
   update admin_settings set passcode_hash = crypt(p_passcode, gen_salt('bf', 10)) where id;
 $$;
-revoke execute on function set_admin_passcode(text) from anon;
-
 create or replace function admin_login(p_passcode text)
 returns table (token uuid, expires_at timestamptz)
 language plpgsql security definer set search_path = public, extensions as $$
@@ -281,8 +297,6 @@ create or replace function is_admin(p_token uuid)
 returns boolean language sql security definer set search_path = public, extensions as $$
   select exists (select 1 from admin_sessions where token = p_token and expires_at > now());
 $$;
-revoke execute on function is_admin(uuid) from anon;
-
 -- ---------------------------------------------------------------- photos
 create or replace function list_photos(p_season text default null)
 returns table (id uuid, url text, caption text, season_id text, sort_order integer, is_wide boolean)
@@ -406,19 +420,6 @@ begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   update teams set passcode_hash = crypt(p_passcode, gen_salt('bf', 10)) where id = p_team_id;
 end; $$;
-
--- ---------------------------------------------------------------- grants
-grant execute on function admin_login(text)                       to anon;
-grant execute on function list_photos(text)                       to anon;
-grant execute on function list_champions()                        to anon;
-grant execute on function list_seasons()                          to anon;
-grant execute on function admin_save_photo(uuid, uuid, text, text, text, integer, boolean) to anon;
-grant execute on function admin_delete_photo(uuid, uuid)          to anon;
-grant execute on function admin_save_champion(uuid, uuid, text, text, text, text, text) to anon;
-grant execute on function admin_delete_champion(uuid, uuid)       to anon;
-grant execute on function admin_new_season(uuid, text, text, date, boolean, boolean) to anon;
-grant execute on function admin_set_current_season(uuid, text)    to anon;
-grant execute on function admin_set_team_passcode(uuid, text, text) to anon;
 
 -- ============================================================================
 -- Storage bucket for uploaded photos.
@@ -636,18 +637,6 @@ language sql security definer set search_path = public as $$
   from photos p where p.placement = p_placement order by p.sort_order, p.created_at desc;
 $$;
 
--- ---------------------------------------------------------------- grants
-grant execute on function list_games(text)                              to anon;
-grant execute on function list_photos_by_placement(text)                to anon;
-grant execute on function admin_save_game(uuid, uuid, text, date, time, text, text, text, integer, integer, text) to anon;
-grant execute on function admin_delete_game(uuid, uuid)                 to anon;
-grant execute on function admin_set_score(uuid, uuid, integer, integer, text) to anon;
-grant execute on function admin_generate_schedule(uuid, text, date, integer, time, integer) to anon;
-grant execute on function admin_save_player(uuid, uuid, text, text, text, text) to anon;
-grant execute on function admin_delete_player(uuid, uuid)               to anon;
-grant execute on function admin_list_players(uuid, text)                to anon;
-grant execute on function admin_set_photo_placement(uuid, uuid, text, integer) to anon;
-
 -- ============================================================================
 -- ORGANIZATIONS  (the charities themselves, admin-managed)
 --
@@ -741,10 +730,6 @@ begin
   end if;
   delete from organizations where id = p_id;
 end; $$;
-
-grant execute on function list_organizations(text) to anon;
-grant execute on function admin_save_org(uuid, text, text, text, text, text, text, text, text, text, text, text) to anon;
-grant execute on function admin_delete_org(uuid, text) to anon;
 
 -- ============================================================================
 -- REGISTRATION WINDOW + INTAKE
@@ -866,10 +851,109 @@ begin
   return n;
 end; $$;
 
+-- ============================================================================
+-- PERMISSIONS  (must come last, after every function exists)
+--
+-- Postgres grants EXECUTE to PUBLIC on every new function, and anon inherits
+-- PUBLIC. Revoking from anon alone is NOT enough: the PUBLIC grant still lets
+-- anyone call it. So we strip PUBLIC and anon from all of our functions first,
+-- then grant back only the ones the website is meant to call.
+-- ============================================================================
+do $$
+declare r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname in ('admin_assign_team',
+        'admin_clear_players',
+        'admin_delete_champion',
+        'admin_delete_game',
+        'admin_delete_org',
+        'admin_delete_photo',
+        'admin_delete_player',
+        'admin_generate_schedule',
+        'admin_list_players',
+        'admin_login',
+        'admin_new_season',
+        'admin_registrations',
+        'admin_save_champion',
+        'admin_save_game',
+        'admin_save_org',
+        'admin_save_photo',
+        'admin_save_player',
+        'admin_set_current_season',
+        'admin_set_paid',
+        'admin_set_photo_placement',
+        'admin_set_score',
+        'admin_set_setting',
+        'admin_set_team_passcode',
+        'get_settings',
+        'is_admin',
+        'list_champions',
+        'list_games',
+        'list_organizations',
+        'list_photos',
+        'list_photos_by_placement',
+        'list_players',
+        'list_seasons',
+        'mark_attendance',
+        'public_teams',
+        'register_player',
+        'session_team',
+        'set_admin_passcode',
+        'set_team_passcode',
+        'team_login',
+        'team_roster')
+  loop
+    execute 'revoke all on function ' || r.sig || ' from public, anon';
+  end loop;
+end $$;
+
+revoke all on all tables in schema public from anon;
+
+-- Callable by the website (anon key). Everything else stays admin/SQL-only.
+grant execute on function public_teams(text)                              to anon;
+grant execute on function team_login(text, text)                          to anon;
+grant execute on function team_roster(uuid, integer)                      to anon;
+grant execute on function mark_attendance(uuid, integer, uuid, text, text) to anon;
+grant execute on function register_player(text, text, text, text, text, text, text, text, text, text, text) to anon;
+
+grant execute on function admin_login(text)                               to anon;
 grant execute on function get_settings()                                  to anon;
+grant execute on function list_photos(text)                               to anon;
+grant execute on function list_photos_by_placement(text)                  to anon;
+grant execute on function list_champions()                                to anon;
+grant execute on function list_seasons()                                  to anon;
+grant execute on function list_games(text)                                to anon;
+grant execute on function list_organizations(text)                        to anon;
+
 grant execute on function admin_set_setting(uuid, text, text)             to anon;
 grant execute on function admin_registrations(uuid, text)                 to anon;
 grant execute on function admin_assign_team(uuid, uuid, text)             to anon;
 grant execute on function admin_set_paid(uuid, uuid, text, boolean)       to anon;
 grant execute on function admin_clear_players(uuid, text, text)           to anon;
-grant execute on function register_player(text, text, text, text, text, text, text, text, text, text, text) to anon;
+grant execute on function admin_save_org(uuid, text, text, text, text, text, text, text, text, text, text, text) to anon;
+grant execute on function admin_delete_org(uuid, text)                    to anon;
+grant execute on function admin_save_photo(uuid, uuid, text, text, text, integer, boolean) to anon;
+grant execute on function admin_delete_photo(uuid, uuid)                  to anon;
+grant execute on function admin_set_photo_placement(uuid, uuid, text, integer) to anon;
+grant execute on function admin_save_champion(uuid, uuid, text, text, text, text, text) to anon;
+grant execute on function admin_delete_champion(uuid, uuid)               to anon;
+grant execute on function admin_new_season(uuid, text, text, date, boolean, boolean) to anon;
+grant execute on function admin_set_current_season(uuid, text)            to anon;
+grant execute on function admin_set_team_passcode(uuid, text, text)       to anon;
+grant execute on function admin_save_game(uuid, uuid, text, date, time, text, text, text, integer, integer, text) to anon;
+grant execute on function admin_delete_game(uuid, uuid)                   to anon;
+grant execute on function admin_set_score(uuid, uuid, integer, integer, text) to anon;
+grant execute on function admin_generate_schedule(uuid, text, date, integer, time, integer) to anon;
+grant execute on function admin_save_player(uuid, uuid, text, text, text, text) to anon;
+grant execute on function admin_delete_player(uuid, uuid)                 to anon;
+grant execute on function admin_list_players(uuid, text)                  to anon;
+
+-- Deliberately NOT granted, so a visitor cannot call them:
+--   is_admin, session_team, list_players,
+--   set_admin_passcode, set_team_passcode
+-- Those are for the SQL editor and for other functions to call internally.
+
+notify pgrst, 'reload schema';
