@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t506344">
+<link rel="stylesheet" href="assets/css/site.css?v=t509083">
 <title>Standings | Durham Softball</title>
 <meta name="description" content="2026 Summer standings for the Durham Softball A and B Leagues.">
 </head>
@@ -30,10 +30,6 @@
         <button role="tab" aria-selected="false" data-league="B">B League</button>
       </div>
       <span class="spacer"></span>
-      <div class="seg" role="tablist" aria-label="Data mode">
-        <button role="tab" aria-selected="true" data-mode="live">Live (0-0)</button>
-        <button role="tab" aria-selected="false" data-mode="sample">Sample results</button>
-      </div>
     </div>
     <div id="standings-out" style="display:grid;gap:34px"></div>
     <div class="card card-pad" style="margin-top:34px">
@@ -49,11 +45,11 @@
   </div>
 </main>
 <div data-footer></div>
-<script src="assets/js/data.js?v=t506344"></script>
-<script src="assets/js/site.js?v=t506344"></script>
+<script src="assets/js/data.js?v=t509083"></script>
+<script src="assets/js/site.js?v=t509083"></script>
 <script>
 (function(){
-  var state={league:'both',mode:'live',sortKey:'pct',sortDir:'desc',season:DS.SEASON_ARCHIVE[0].id};
+  var state={league:'both',sortKey:'pct',sortDir:'desc',season:DS.SEASON_ARCHIVE[0].id};
   var noticeIcon=document.querySelector('.notice span');
   if(noticeIcon) noticeIcon.innerHTML = DSUI.ICONS.info;
 
@@ -74,7 +70,7 @@
 
     if(!sn.live){
       if(notice) notice.style.display='none';
-      controls.forEach(function(c){c.closest('.seg').style.display='none';});
+      controls.forEach(function(c){ var g=c.closest('.seg'); if(g) g.style.display='none'; });
       document.getElementById('standings-out').innerHTML=
         '<div class="card card-pad center">'+
           '<h3 class="h-sm">'+DSUI.esc(sn.label)+' results are not imported yet</h3>'+
@@ -88,9 +84,9 @@
       return;
     }
     if(notice) notice.style.display='';
-    controls.forEach(function(c){c.closest('.seg').style.display='';});
+    controls.forEach(function(c){ var g=c.closest('.seg'); if(g) g.style.display=''; });
 
-    var results = state.mode==='sample' ? DS.SAMPLE_RESULTS : null;
+    var results = DS.RESULTS;
     var all = DS.computeStandings(results);
     var leagues = state.league==='both' ? ['A','B'] : [state.league];
 
@@ -114,12 +110,12 @@
     b.addEventListener('click',function(){
       b.parentNode.querySelectorAll('button').forEach(function(o){o.setAttribute('aria-selected','false');});
       b.setAttribute('aria-selected','true');
-      if(b.hasAttribute('data-league')) state.league=b.getAttribute('data-league');
-      else state.mode=b.getAttribute('data-mode');
+      state.league=b.getAttribute('data-league');
       render();
     });
   });
   render();
+  DS.loadSchedule().then(function(ok){ if(ok) render(); });
 })();
 </script>
 </body>

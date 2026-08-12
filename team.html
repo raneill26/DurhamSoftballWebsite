@@ -7,17 +7,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t506344">
+<link rel="stylesheet" href="assets/css/site.css?v=t509083">
 <title>Team | Durham Softball</title>
 </head>
 <body>
 <div data-header="teams.html"></div>
 <div id="team-page"></div>
 <div data-footer></div>
-<script src="assets/js/config.js?v=t506344"></script>
-<script src="assets/js/data.js?v=t506344"></script>
-<script src="assets/js/api.js?v=t506344"></script>
-<script src="assets/js/site.js?v=t506344"></script>
+<script src="assets/js/config.js?v=t509083"></script>
+<script src="assets/js/data.js?v=t509083"></script>
+<script src="assets/js/api.js?v=t509083"></script>
+<script src="assets/js/site.js?v=t509083"></script>
 <script>
 (function(){
   var id = DSUI.qs('id');
@@ -36,7 +36,10 @@
 
   document.title = team.name + ' - Durham Softball';
 
-  var games = DS.teamGames(team.id);
+  var games = [];
+
+  function drawTeam(){
+  games = DS.teamGames(team.id);
   var st = DS.computeStandings(null).filter(function(r){return r.team.id===team.id;})[0];
   var pos = DS.standingsPosition(team.id, null);
 
@@ -125,9 +128,13 @@
       '<div style="margin-top:44px" class="center">'+
         '<a class="btn btn-outline" href="current-teams.html">&larr; All current teams</a></div>'+
     '</div></main>';
+  }
+
+  drawTeam();
   /* ------------------------------------------------------------------
      Captain attendance: passcode gate, then a per-game roster.
      ------------------------------------------------------------------ */
+  function mountAttendance(){
   var att = document.getElementById('attendance');
   var upcoming = games.filter(function(g){ return new Date(g.day.date+'T23:59:59') >= new Date(); });
   var gameList = (upcoming.length ? upcoming : games).slice(0, 8);
@@ -233,6 +240,14 @@
 
   var sess = DSAPI.session();
   if(sess && sess.team_id === team.id) rosterView(); else loginView();
+  }
+
+  mountAttendance();
+
+  // Fixtures live in the database. Redraw once they arrive.
+  DS.loadSchedule().then(function(ok){
+    if(ok){ drawTeam(); mountAttendance(); }
+  });
 })();
 </script>
 </body>

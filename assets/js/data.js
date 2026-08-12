@@ -178,88 +178,8 @@
     xHandle: 'PlayDurham'
   };
 
-  var GAMES = [
-    { id:6462, d:'2026-08-16', t:'09:10', h:'ncfff', a:'alp416' },
-    { id:6461, d:'2026-08-16', t:'10:05', h:'porch', a:'hope' },
-    { id:6457, d:'2026-08-16', t:'11:00', h:'josh', a:'umd' },
-    { id:6458, d:'2026-08-16', t:'11:55', h:'aps', a:'spa' },
-    { id:6459, d:'2026-08-16', t:'12:50', h:'bcw', a:'v2v' },
-    { id:6460, d:'2026-08-16', t:'13:45', h:'book', a:'kdb' },
-    { id:6456, d:'2026-08-16', t:'14:40', h:'hfnh', a:'mow' },
-    { id:6455, d:'2026-08-16', t:'15:35', h:'mlt', a:'nccadv' },
-    { id:6463, d:'2026-08-16', t:'16:30', h:'bcll', a:'sdll' },
-    { id:6464, d:'2026-08-16', t:'17:25', h:'bike', a:'gotr' },
-    { id:6413, d:'2026-08-23', t:'09:10', h:'spa', a:'josh' },
-    { id:6414, d:'2026-08-23', t:'10:05', h:'kdb', a:'alp416' },
-    { id:6415, d:'2026-08-23', t:'11:00', h:'porch', a:'nccadv' },
-    { id:6416, d:'2026-08-23', t:'11:55', h:'mow', a:'bcll' },
-    { id:6417, d:'2026-08-23', t:'12:50', h:'mlt', a:'v2v' },
-    { id:6418, d:'2026-08-23', t:'13:45', h:'hfnh', a:'book' },
-    { id:6419, d:'2026-08-23', t:'14:40', h:'bcw', a:'umd' },
-    { id:6420, d:'2026-08-23', t:'15:35', h:'aps', a:'hope' },
-    { id:6421, d:'2026-08-23', t:'16:30', h:'ncfff', a:'bike' },
-    { id:6422, d:'2026-08-23', t:'17:25', h:'sdll', a:'gotr' },
-    { id:6465, d:'2026-08-30', t:'09:10', h:'gotr', a:'mow' },
-    { id:6466, d:'2026-08-30', t:'10:05', h:'alp416', a:'hfnh' },
-    { id:6467, d:'2026-08-30', t:'11:00', h:'hope', a:'spa' },
-    { id:6468, d:'2026-08-30', t:'11:55', h:'kdb', a:'ncfff' },
-    { id:6469, d:'2026-08-30', t:'12:50', h:'bcll', a:'book' },
-    { id:6470, d:'2026-08-30', t:'13:45', h:'bike', a:'sdll' },
-    { id:6471, d:'2026-08-30', t:'14:40', h:'v2v', a:'porch' },
-    { id:6473, d:'2026-08-30', t:'15:35', h:'josh', a:'bcw' },
-    { id:6474, d:'2026-08-30', t:'16:30', h:'umd', a:'mlt' },
-    { id:6475, d:'2026-08-30', t:'17:25', h:'nccadv', a:'aps' },
-    { id:6423, d:'2026-09-06', t:'09:10', h:'mow', a:'alp416' },
-    { id:6424, d:'2026-09-06', t:'10:05', h:'nccadv', a:'josh' },
-    { id:6425, d:'2026-09-06', t:'11:00', h:'sdll', a:'kdb' },
-    { id:6426, d:'2026-09-06', t:'11:55', h:'book', a:'gotr' },
-    { id:6427, d:'2026-09-06', t:'12:50', h:'aps', a:'mlt' },
-    { id:6428, d:'2026-09-06', t:'13:45', h:'hfnh', a:'bike' },
-    { id:6429, d:'2026-09-06', t:'14:40', h:'umd', a:'porch' },
-    { id:6430, d:'2026-09-06', t:'15:35', h:'v2v', a:'spa' },
-    { id:6431, d:'2026-09-06', t:'16:30', h:'bcw', a:'hope' },
-    { id:6433, d:'2026-09-06', t:'17:25', h:'bcll', a:'ncfff' },
-    { id:6476, d:'2026-09-13', t:'09:10', h:'bcw', a:'aps' },
-    { id:6477, d:'2026-09-13', t:'10:05', h:'gotr', a:'bcll' },
-    { id:6478, d:'2026-09-13', t:'11:00', h:'spa', a:'nccadv' },
-    { id:6479, d:'2026-09-13', t:'11:55', h:'bike', a:'kdb' },
-    { id:6480, d:'2026-09-13', t:'12:50', h:'alp416', a:'sdll' },
-    { id:6481, d:'2026-09-13', t:'13:45', h:'v2v', a:'umd' },
-    { id:6482, d:'2026-09-13', t:'14:40', h:'mow', a:'book' },
-    { id:6483, d:'2026-09-13', t:'15:35', h:'porch', a:'mlt' },
-    { id:6484, d:'2026-09-13', t:'16:30', h:'hope', a:'josh' },
-    { id:6485, d:'2026-09-13', t:'17:25', h:'ncfff', a:'hfnh' },
-    { id:6434, d:'2026-09-20', t:'09:10', h:'ncfff', a:'book' },
-    { id:6435, d:'2026-09-20', t:'10:05', h:'hope', a:'v2v' },
-    { id:6436, d:'2026-09-20', t:'11:00', h:'spa', a:'porch' },
-    { id:6437, d:'2026-09-20', t:'11:55', h:'umd', a:'nccadv' },
-    { id:6438, d:'2026-09-20', t:'12:50', h:'bike', a:'alp416' },
-    { id:6439, d:'2026-09-20', t:'13:45', h:'mlt', a:'bcw' },
-    { id:6440, d:'2026-09-20', t:'14:40', h:'kdb', a:'bcll' },
-    { id:6441, d:'2026-09-20', t:'15:35', h:'sdll', a:'mow' },
-    { id:6442, d:'2026-09-20', t:'16:30', h:'gotr', a:'hfnh' },
-    { id:6443, d:'2026-09-20', t:'17:25', h:'aps', a:'josh' },
-    { id:6486, d:'2026-09-27', t:'09:10', h:'josh', a:'porch' },
-    { id:6487, d:'2026-09-27', t:'10:05', h:'gotr', a:'ncfff' },
-    { id:6488, d:'2026-09-27', t:'11:00', h:'hope', a:'mlt' },
-    { id:6489, d:'2026-09-27', t:'11:55', h:'v2v', a:'aps' },
-    { id:6490, d:'2026-09-27', t:'12:50', h:'nccadv', a:'bcw' },
-    { id:6491, d:'2026-09-27', t:'13:45', h:'alp416', a:'bcll' },
-    { id:6493, d:'2026-09-27', t:'14:40', h:'sdll', a:'hfnh' },
-    { id:6494, d:'2026-09-27', t:'15:35', h:'spa', a:'umd' },
-    { id:6495, d:'2026-09-27', t:'16:30', h:'book', a:'bike' },
-    { id:6496, d:'2026-09-27', t:'17:25', h:'kdb', a:'mow' },
-    { id:6444, d:'2026-10-04', t:'09:10', h:'hfnh', a:'kdb' },
-    { id:6445, d:'2026-10-04', t:'10:05', h:'nccadv', a:'hope' },
-    { id:6446, d:'2026-10-04', t:'11:00', h:'book', a:'sdll' },
-    { id:6447, d:'2026-10-04', t:'11:55', h:'mow', a:'ncfff' },
-    { id:6448, d:'2026-10-04', t:'12:50', h:'alp416', a:'gotr' },
-    { id:6449, d:'2026-10-04', t:'13:45', h:'josh', a:'v2v' },
-    { id:6450, d:'2026-10-04', t:'14:40', h:'bcll', a:'bike' },
-    { id:6451, d:'2026-10-04', t:'15:35', h:'mlt', a:'spa' },
-    { id:6453, d:'2026-10-04', t:'16:30', h:'porch', a:'bcw' },
-    { id:6454, d:'2026-10-04', t:'17:25', h:'umd', a:'aps' }
-  ];
+  /* Fixtures live in the database now. See supabase/seed_games.sql. */
+  var GAMES = [];
 
   /* ---------- Build schedule from the flat game list ---------- */
   function fmtTime(t) {
@@ -293,7 +213,34 @@
     });
   }
 
-  var SCHEDULE = buildSchedule();
+  var SCHEDULE = buildSchedule();   // empty until loadSchedule() runs
+
+  function loadSchedule(season){
+    if(!global.DSAPI || !global.DSAPI.configured()) return Promise.resolve(false);
+    return global.DSAPI.listGames(season).then(function(rows){
+      if(!rows) return false;
+      var byDate={}, order=[];
+      RESULTS = {};
+      rows.forEach(function(r){
+        if(!byDate[r.game_date]){ byDate[r.game_date]=[]; order.push(r.game_date); }
+        var h=parseInt(r.game_time.slice(0,2),10), m=r.game_time.slice(3,5);
+        var ap=h>=12?'PM':'AM', h12=h%12||12;
+        var g={ id:r.id, gameId:r.legacy_id, time:h12+':'+m+' '+ap, time24:r.game_time,
+                date:r.game_date, home:r.home_team, away:r.away_team,
+                league:r.league, venue:r.venue||SEASON.venue, status:r.status };
+        if(r.home_score!=null && r.away_score!=null){
+          RESULTS[g.id]={ home:r.home_score, away:r.away_score };
+        }
+        byDate[r.game_date].push(g);
+      });
+      order.sort();
+      SCHEDULE = order.map(function(d,i){
+        byDate[d].sort(function(a,b){ return a.time24 < b.time24 ? -1 : 1; });
+        return { week:i+1, date:d, games:byDate[d] };
+      });
+      return true;
+    }).catch(function(){ return false; });
+  }
 
   function teamGames(teamId) {
     var out = [];
@@ -309,29 +256,8 @@
   }
 
   /* ---------- Results ----------
-     Season opens Aug 16, so live records are genuinely 0-0.
-     Sample mode fills deterministic scores for the first 4 weeks. */
-  function rng(seed) {
-    var s = seed >>> 0;
-    return function () {
-      s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0;
-      return s / 4294967296;
-    };
-  }
-
-  function buildSampleResults() {
-    var r = rng(20260816), out = {};
-    SCHEDULE.slice(0, 4).forEach(function (day) {
-      day.games.forEach(function (g) {
-        var hs = 4 + Math.floor(r() * 16), as = 4 + Math.floor(r() * 16);
-        if (hs === as && r() > 0.35) hs += 1;
-        out[g.id] = { home: hs, away: as };
-      });
-    });
-    return out;
-  }
-
-  var SAMPLE_RESULTS = buildSampleResults();
+     Scores come from the games table. Nothing is invented. */
+  var RESULTS = {};
 
   function computeStandings(results) {
     var rec = {};
@@ -404,10 +330,11 @@
     CHARITY_PHOTOS: CHARITY_PHOTOS,
     byId: byId,
     SEASON: SEASON,
-    SCHEDULE: SCHEDULE,
+    get SCHEDULE(){ return SCHEDULE; },
+    get RESULTS(){ return RESULTS; },
+    loadSchedule: loadSchedule,
     GAMES: GAMES,
     teamGames: teamGames,
-    SAMPLE_RESULTS: SAMPLE_RESULTS,
     computeStandings: computeStandings,
     standingsPosition: standingsPosition,
     REVIEWS: REVIEWS
