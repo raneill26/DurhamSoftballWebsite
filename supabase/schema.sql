@@ -561,6 +561,7 @@ create index if not exists games_season_date_idx on games (season_id, game_date,
 alter table games enable row level security;
 
 -- photo placement: where a photo is allowed to surface
+alter table photos add column if not exists placement text not null default 'gallery';
 -- 'gallery' | 'home' | 'hero' | 'champions'
 
 -- ---------------------------------------------------------------- public read
@@ -875,6 +876,8 @@ begin
 end; $$;
 
 -- Intake fields. team_id stays null until an admin assigns it.
+alter table players add column if not exists shirt_size        text;
+alter table players add column if not exists preferred_team_id text;
 
 -- Registration now records a preference, never a roster placement.
 create or replace function register_player(
