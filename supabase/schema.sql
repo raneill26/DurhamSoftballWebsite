@@ -80,7 +80,7 @@ create table if not exists seasons (
   starts_on   date,
   is_current  boolean not null default false
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table seasons add column if not exists label text;
 alter table seasons add column if not exists starts_on date;
 alter table seasons add column if not exists is_current boolean default false;
@@ -93,7 +93,7 @@ create table if not exists teams (
   passcode_hash text,
   created_at    timestamptz not null default now()
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table teams add column if not exists name text;
 alter table teams add column if not exists league text check (league in ('A','B'));
 alter table teams add column if not exists season_id text references seasons(id) on delete cascade;
@@ -110,7 +110,7 @@ create table if not exists players (
   created_at  timestamptz not null default now(),
   unique (email, season_id)
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table players add column if not exists full_name text;
 alter table players add column if not exists email text;
 alter table players add column if not exists phone text;
@@ -133,15 +133,15 @@ create table if not exists waivers (
   user_agent       text,
   unique (player_id, season_id)
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table waivers add column if not exists player_id uuid references players(id) on delete cascade;
 alter table waivers add column if not exists season_id text references seasons(id) on delete cascade;
 alter table waivers add column if not exists waiver_version text;
 alter table waivers add column if not exists signed_name text;
 alter table waivers add column if not exists signed_at timestamptz default now();
-alter table waivers add column if not exists and that they meant it. agreed_text_hash text;
+alter table waivers add column if not exists agreed_text_hash text;
 alter table waivers add column if not exists signature_image text;
-alter table waivers add column if not exists null if typed ip_address inet;
+alter table waivers add column if not exists ip_address inet;
 alter table waivers add column if not exists user_agent text;
 
 create table if not exists registrations (
@@ -157,7 +157,7 @@ create table if not exists registrations (
   created_at   timestamptz not null default now(),
   unique (player_id, season_id)
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table registrations add column if not exists player_id uuid references players(id) on delete cascade;
 alter table registrations add column if not exists season_id text references seasons(id) on delete cascade;
 alter table registrations add column if not exists amount_cents integer;
@@ -177,7 +177,7 @@ create table if not exists attendance (
   updated_at  timestamptz not null default now(),
   unique (game_id, player_id)
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table attendance add column if not exists game_id integer;
 alter table attendance add column if not exists team_id text references teams(id) on delete cascade;
 alter table attendance add column if not exists player_id uuid references players(id) on delete cascade;
@@ -193,7 +193,7 @@ create table if not exists team_sessions (
   team_id    text not null references teams(id) on delete cascade,
   expires_at timestamptz not null default now() + interval '12 hours'
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table team_sessions add column if not exists team_id text references teams(id) on delete cascade;
 alter table team_sessions add column if not exists expires_at timestamptz default now() + interval '12 hours';
 
@@ -287,7 +287,7 @@ create table if not exists admin_settings (
   id            boolean primary key default true check (id),
   passcode_hash text
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table admin_settings add column if not exists passcode_hash text;
 insert into admin_settings (id) values (true) on conflict (id) do nothing;
 
@@ -295,7 +295,7 @@ create table if not exists admin_sessions (
   token      uuid primary key default gen_random_uuid(),
   expires_at timestamptz not null default now() + interval '8 hours'
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table admin_sessions add column if not exists expires_at timestamptz default now() + interval '8 hours';
 
 create table if not exists photos (
@@ -307,7 +307,7 @@ create table if not exists photos (
   is_wide    boolean not null default false,
   created_at timestamptz not null default now()
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table photos add column if not exists url text;
 alter table photos add column if not exists caption text;
 alter table photos add column if not exists season_id text references seasons(id) on delete set null;
@@ -324,9 +324,10 @@ create table if not exists champions (
   photo_url text,
   caption   text
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table champions add column if not exists season_id text references seasons(id) on delete set null;
 alter table champions add column if not exists label text;
+alter table champions add column if not exists league text;
 alter table champions add column if not exists team_name text;
 alter table champions add column if not exists photo_url text;
 alter table champions add column if not exists caption text;
@@ -501,6 +502,30 @@ end; $$;
 -- SCHEDULE, ROSTERS, RESULTS  (admin-managed)
 -- ============================================================================
 
+-- ----------------------------------------------------------------------------
+-- An earlier version of this file created `games` with different column names
+-- (home_team_id / away_team_id, integer id). Adding columns on top of that
+-- would leave the table with both sets and a wrong id type, so rebuild it
+-- instead. Only ever rebuilds when the table holds no rows: if there are
+-- games recorded, it stops and asks you to deal with them deliberately.
+-- ----------------------------------------------------------------------------
+do $$
+declare n integer;
+begin
+  if to_regclass('public.games') is not null
+     and not exists (select 1 from information_schema.columns
+                     where table_schema='public' and table_name='games'
+                       and column_name='home_team') then
+    execute 'select count(*) from games' into n;
+    if n > 0 then
+      raise exception
+        'games has % rows in an old layout. Export them, run "drop table games cascade", then re-run this file.', n;
+    end if;
+    drop table games cascade;
+    raise notice 'rebuilt the empty games table in the current layout';
+  end if;
+end $$;
+
 create table if not exists games (
   id          uuid primary key default gen_random_uuid(),
   season_id   text not null references seasons(id) on delete cascade,
@@ -518,10 +543,10 @@ create table if not exists games (
   created_at  timestamptz not null default now(),
   check (home_team <> away_team)
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table games add column if not exists season_id text references seasons(id) on delete cascade;
 alter table games add column if not exists legacy_id integer;
-alter table games add column if not exists if any game_date date;
+alter table games add column if not exists game_date date;
 alter table games add column if not exists game_time time;
 alter table games add column if not exists home_team text references teams(id) on delete cascade;
 alter table games add column if not exists away_team text references teams(id) on delete cascade;
@@ -536,7 +561,6 @@ create index if not exists games_season_date_idx on games (season_id, game_date,
 alter table games enable row level security;
 
 -- photo placement: where a photo is allowed to surface
-alter table photos add column if not exists placement text default 'gallery';
 -- 'gallery' | 'home' | 'hero' | 'champions'
 
 -- ---------------------------------------------------------------- public read
@@ -736,15 +760,17 @@ create table if not exists organizations (
   sort_order  integer not null default 0,
   created_at  timestamptz not null default now()
 );
--- backfill any columns missing from an older version of this table
-alter table organizations add column if not exists 'bike';
-alter table organizations add column if not exists matches data.js ids name text;
+-- backfill columns missing from an older version of this table
+alter table organizations add column if not exists name text;
 alter table organizations add column if not exists short_name text;
 alter table organizations add column if not exists cause text;
+alter table organizations add column if not exists blurb text;
+alter table organizations add column if not exists logo_url text;
 alter table organizations add column if not exists website text;
+alter table organizations add column if not exists legacy_url text;
+alter table organizations add column if not exists status text default 'inactive' check (status in ('active','inactive','former'));
 alter table organizations add column if not exists sort_order integer default 0;
 alter table organizations add column if not exists created_at timestamptz default now();
-alter table organizations enable row level security;
 
 -- Public read: everything except nothing. These are all public-facing fields.
 create or replace function list_organizations(p_season text default null)
@@ -823,9 +849,8 @@ create table if not exists site_settings (
   key   text primary key,
   value text
 );
--- backfill any columns missing from an older version of this table
+-- backfill columns missing from an older version of this table
 alter table site_settings add column if not exists value text;
-alter table site_settings enable row level security;
 
 insert into site_settings (key, value) values
   ('registration_open','false'),
@@ -850,8 +875,6 @@ begin
 end; $$;
 
 -- Intake fields. team_id stays null until an admin assigns it.
-alter table players add column if not exists shirt_size        text;
-alter table players add column if not exists preferred_team_id text;
 
 -- Registration now records a preference, never a roster placement.
 create or replace function register_player(
