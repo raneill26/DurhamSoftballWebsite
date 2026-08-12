@@ -7,17 +7,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t510195">
+<link rel="stylesheet" href="assets/css/site.css?v=t512146">
 <title>Team | Durham Softball</title>
 </head>
 <body>
 <div data-header="teams.html"></div>
 <div id="team-page"></div>
 <div data-footer></div>
-<script src="assets/js/config.js?v=t510195"></script>
-<script src="assets/js/data.js?v=t510195"></script>
-<script src="assets/js/api.js?v=t510195"></script>
-<script src="assets/js/site.js?v=t510195"></script>
+<script src="assets/js/config.js?v=t512146"></script>
+<script src="assets/js/data.js?v=t512146"></script>
+<script src="assets/js/api.js?v=t512146"></script>
+<script src="assets/js/site.js?v=t512146"></script>
 <script>
 (function(){
   var id = DSUI.qs('id');
@@ -212,30 +212,62 @@
           'Players appear here once they register.</p>';
         return;
       }
-      list.innerHTML = rows.map(function(p){
-        return '<div class="att-row" data-p="'+p.player_id+'">'+
-          '<div><div class="att-name">'+DSUI.esc(p.full_name)+'</div>'+
-            (p.waiver_signed ? '' : '<div class="att-warn">Waiver not signed</div>')+'</div>'+
-          '<div class="att-btns">'+
-            ['in','maybe','out'].map(function(st){
-              return '<button data-s="'+st+'" aria-pressed="'+(p.status===st)+'">'+st+'</button>';
-            }).join('')+
-          '</div></div>';
-      }).join('');
+      var order = rows.map(function(p){ return p.player_id; });
 
-      list.querySelectorAll('.att-btns button').forEach(function(b){
-        b.addEventListener('click', function(){
-          var row = b.closest('.att-row');
-          var pid = row.getAttribute('data-p');
-          var st = b.getAttribute('data-s');
-          row.querySelectorAll('button').forEach(function(o){ o.setAttribute('aria-pressed','false'); });
-          b.setAttribute('aria-pressed','true');
-          DSAPI.markAttendance(gameId, pid, st).catch(function(err){
-            list.insertAdjacentHTML('afterbegin',
-              '<div class="form-msg err">Could not save: '+DSUI.esc(err.message)+'</div>');
+      function paint(){
+        list.innerHTML = order.map(function(id, i){
+          var p = rows.filter(function(r){ return r.player_id === id; })[0];
+          return '<div class="att-row" data-p="'+p.player_id+'">'+
+            '<div class="att-move">'+
+              '<button type="button" data-up aria-label="Move up"'+(i===0?' disabled':'')+'>&#9650;</button>'+
+              '<button type="button" data-down aria-label="Move down"'+(i===order.length-1?' disabled':'')+'>&#9660;</button>'+
+            '</div>'+
+            '<div><div class="att-name">'+DSUI.esc(p.full_name)+'</div>'+
+              (p.waiver_signed ? '' : '<div class="att-warn">Waiver not signed</div>')+'</div>'+
+            '<div class="att-btns">'+
+              ['in','maybe','out'].map(function(st){
+                return '<button data-s="'+st+'" aria-pressed="'+(p.status===st)+'">'+st+'</button>';
+              }).join('')+
+            '</div></div>';
+        }).join('')+
+        '<div class="att-order-msg" id="ord-msg">Use the arrows to set the order players appear in. Saved automatically.</div>';
+
+        function note(text, bad){
+          var m=document.getElementById('ord-msg');
+          if(m){ m.textContent=text; m.style.color = bad ? 'var(--loss)' : ''; }
+        }
+
+        list.querySelectorAll('.att-btns button').forEach(function(b){
+          b.addEventListener('click', function(){
+            var row = b.closest('.att-row');
+            var pid = row.getAttribute('data-p');
+            var st  = b.getAttribute('data-s');
+            row.querySelectorAll('.att-btns button').forEach(function(o){ o.setAttribute('aria-pressed','false'); });
+            b.setAttribute('aria-pressed','true');
+            rows.forEach(function(r){ if(r.player_id===pid) r.status=st; });
+            DSAPI.markAttendance(gameId, pid, st)
+              .catch(function(err){ note('Could not save: '+err.message, true); });
           });
         });
-      });
+
+        function move(pid, delta){
+          var i = order.indexOf(pid), j = i + delta;
+          if(i < 0 || j < 0 || j >= order.length) return;
+          order.splice(j, 0, order.splice(i, 1)[0]);
+          paint();
+          DSAPI.setRosterOrder(order)
+            .then(function(){ note('Order saved.'); })
+            .catch(function(err){ note('Could not save the order: '+err.message, true); });
+        }
+        list.querySelectorAll('[data-up]').forEach(function(b){
+          b.addEventListener('click', function(){ move(b.closest('.att-row').getAttribute('data-p'), -1); });
+        });
+        list.querySelectorAll('[data-down]').forEach(function(b){
+          b.addEventListener('click', function(){ move(b.closest('.att-row').getAttribute('data-p'), 1); });
+        });
+      }
+
+      paint();
     }).catch(function(err){
       if(err.message === 'NO_SESSION') return loginView();
       list.innerHTML = '<div class="form-msg err">Could not load the roster: '+DSUI.esc(err.message)+'</div>';

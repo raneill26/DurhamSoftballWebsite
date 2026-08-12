@@ -43,7 +43,7 @@
 
 
   /* ---------- Partner charities without an active team ----------
-     These organisations are still partnered with Durham Softball, they just
+     These organizations are still partnered with Durham Softball, they just
      do not have a team fielded this season. They appear on the charities page
      with a "Partner" tag instead of an A or B League tag, and they are NOT
      offered on the registration team dropdown.
@@ -63,7 +63,7 @@
     { id:'treesd', name:'TreesDurham',                          status:'former',  logo:CDN+'Trees.jpg', url:'https://durhamsoftball.com/teams/treesdurham/', cause:'Tree planting and canopy' }
   ];
 
-  /* Every organisation the charities page shows: active teams first, then
+  /* Every organization the charities page shows: active teams first, then
      partners without a team, then former partners. */
   /* Charity photos are opt-in. List an id here once you drop
      assets/charities/<id>.jpg in, and the spotlight will use it instead of

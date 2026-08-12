@@ -1084,3 +1084,47 @@ grant execute on function admin_list_players(uuid, text)                  to ano
 -- Those are for the SQL editor and for other functions to call internally.
 
 notify pgrst, 'reload schema';
+
+-- ============================================================================
+-- ROSTER ORDER  (captains reorder their own attendance sheet)
+-- ============================================================================
+
+alter table players add column if not exists roster_order integer;
+
+-- Roster now comes back in the captain's chosen order, unordered players last.
+create or replace function team_roster(p_token uuid, p_game_id integer)
+returns table (player_id uuid, full_name text, status text, waiver_signed boolean, roster_order integer)
+language plpgsql security definer set search_path = public, extensions as $$
+#variable_conflict use_column
+declare v_team text;
+begin
+  v_team := session_team(p_token);
+  if v_team is null then raise exception 'session expired' using errcode = '28000'; end if;
+  return query
+    select p.id, p.full_name,
+           coalesce(a.status, 'maybe'),
+           exists (select 1 from waivers w where w.player_id = p.id and w.season_id = p.season_id),
+           p.roster_order
+    from players p
+    left join attendance a on a.player_id = p.id and a.game_id = p_game_id
+    where p.team_id = v_team
+    order by p.roster_order nulls last, p.full_name;
+end; $$;
+
+-- Captains save the whole order in one call: an array of player ids in order.
+create or replace function set_roster_order(p_token uuid, p_ids uuid[])
+returns void language plpgsql security definer set search_path = public, extensions as $$
+declare v_team text; i integer;
+begin
+  v_team := session_team(p_token);
+  if v_team is null then raise exception 'session expired' using errcode = '28000'; end if;
+  for i in 1 .. coalesce(array_length(p_ids, 1), 0) loop
+    update players set roster_order = i
+    where id = p_ids[i] and team_id = v_team;   -- scoped: cannot touch another team
+  end loop;
+end; $$;
+
+grant execute on function team_roster(uuid, integer)  to anon;
+grant execute on function set_roster_order(uuid, uuid[]) to anon;
+
+notify pgrst, 'reload schema';

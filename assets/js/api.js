@@ -80,6 +80,12 @@
       return rpc('team_roster', { p_token: s.token, p_game_id: gameId });
     },
 
+    setRosterOrder: function (ids) {
+      var s = loadSession();
+      if (!s) return Promise.reject(new Error('NO_SESSION'));
+      return rpc('set_roster_order', { p_token: s.token, p_ids: ids });
+    },
+
     markAttendance: function (gameId, playerId, status, notedBy) {
       var s = loadSession();
       if (!s) return Promise.reject(new Error('NO_SESSION'));

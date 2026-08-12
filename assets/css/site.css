@@ -591,3 +591,12 @@ a.gc-team-name:hover{color:var(--clay)}
   border-radius:50%;transition:transform .2s}
 .switch input:checked + span{background:var(--win)}
 .switch input:checked + span::before{transform:translateX(24px)}
+
+/* Captain roster reordering */
+.att-row{grid-template-columns:auto 1fr auto}
+.att-move{display:flex;flex-direction:column;gap:2px}
+.att-move button{width:26px;height:20px;padding:0;border:1px solid var(--line-2);background:#fff;
+  border-radius:4px;font-size:.7rem;line-height:1;color:var(--text-mute)}
+.att-move button:hover:not(:disabled){border-color:var(--text);color:var(--text)}
+.att-move button:disabled{opacity:.3}
+.att-order-msg{font-size:.8rem;color:var(--text-mute);padding:10px 16px;border-top:1px solid var(--line)}

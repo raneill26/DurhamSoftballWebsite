@@ -7,17 +7,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t510195">
+<link rel="stylesheet" href="assets/css/site.css?v=t512146">
 <title>Charity | Durham Softball</title>
 </head>
 <body>
 <div data-header="teams.html"></div>
 <div id="charity-page"></div>
 <div data-footer></div>
-<script src="assets/js/config.js?v=t510195"></script>
-<script src="assets/js/data.js?v=t510195"></script>
-<script src="assets/js/api.js?v=t510195"></script>
-<script src="assets/js/site.js?v=t510195"></script>
+<script src="assets/js/config.js?v=t512146"></script>
+<script src="assets/js/data.js?v=t512146"></script>
+<script src="assets/js/api.js?v=t512146"></script>
+<script src="assets/js/site.js?v=t512146"></script>
 <script>
 (function(){
   var host = document.getElementById('charity-page');
@@ -61,12 +61,12 @@
         '<h2>About '+DSUI.esc(org.name)+'</h2>'+
         (org.blurb
           ? '<p>'+DSUI.esc(org.blurb)+'</p>'
-          : '<p class="muted">A full description of this organisation has not been added yet. '+
+          : '<p class="muted">A full description of this organization has not been added yet. '+
             'Their write-up on the current league site is linked below.</p>')+
 
         '<h2>Their connection to the league</h2>'+
         (org.partnerStatus==='active'
-          ? '<p>'+DSUI.esc(org.name)+' is one of the organisations Durham Softball is raising money for '+
+          ? '<p>'+DSUI.esc(org.name)+' is one of the organizations Durham Softball is raising money for '+
             'this season. A share of the season donation pool goes directly to them.</p>'
           : org.partnerStatus==='inactive'
           ? '<p>'+DSUI.esc(org.name)+' is a current partner of the league without a team this season. '+

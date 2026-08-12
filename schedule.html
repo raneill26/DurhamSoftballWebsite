@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t510195">
+<link rel="stylesheet" href="assets/css/site.css?v=t512146">
 <title>Schedule | Durham Softball</title>
 <meta name="description" content="Full 2026 Summer schedule for Durham Softball. Every matchup shows the away and home team clearly labelled.">
 </head>
@@ -43,10 +43,10 @@
   </div>
 </main>
 <div data-footer></div>
-<script src="assets/js/config.js?v=t510195"></script>
-<script src="assets/js/data.js?v=t510195"></script>
-<script src="assets/js/api.js?v=t510195"></script>
-<script src="assets/js/site.js?v=t510195"></script>
+<script src="assets/js/config.js?v=t512146"></script>
+<script src="assets/js/data.js?v=t512146"></script>
+<script src="assets/js/api.js?v=t512146"></script>
+<script src="assets/js/site.js?v=t512146"></script>
 <script>
 (function(){
   var state={league:'all',team:'all'};
@@ -61,23 +61,63 @@
     var t=document.getElementById(this.value); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
   });
 
+  // A game is "completed" once its start time has passed.
+  function hasStarted(day, g){
+    var t=(g.time24||'00:00:00').slice(0,5).split(':');
+    var d=new Date(day.date+'T00:00:00');
+    d.setHours(parseInt(t[0],10), parseInt(t[1],10), 0, 0);
+    return d < new Date();
+  }
+
+  function dayBlock(day, games, opts){
+    return '<section class="day-group" id="'+(opts.idPrefix||'week-')+day.week+'">'+
+      '<div class="day-head"><h3>'+DSUI.fmtDate(day.date,{weekday:'long',month:'long',day:'numeric'})+'</h3>'+
+      '<span class="day-sub">Week '+day.week+' &middot; '+games.length+' game'+(games.length>1?'s':'')+'</span>'+
+      '<span class="spacer"></span>'+
+      (opts.badge||'')+'</div>'+
+      '<div class="grid grid-2">'+games.map(function(g){
+        return DSUI.gameCard(g,{results:DS.RESULTS});
+      }).join('')+'</div></section>';
+  }
+
   function render(){
-    var out=DS.SCHEDULE.map(function(day){
+    var upcoming=[], done=[];
+
+    DS.SCHEDULE.forEach(function(day){
       var games=day.games.filter(function(g){
         if(state.league!=='all'&&g.league!==state.league) return false;
         if(state.team!=='all'&&g.home!==state.team&&g.away!==state.team) return false;
         return true;
       });
-      if(!games.length) return '';
-      return '<section class="day-group" id="week-'+day.week+'">'+
-        '<div class="day-head"><h3>'+DSUI.fmtDate(day.date,{weekday:'long',month:'long',day:'numeric'})+'</h3>'+
-        '<span class="day-sub">Week '+day.week+' &middot; '+games.length+' game'+(games.length>1?'s':'')+'</span>'+
-        '<span class="spacer"></span>'+
-        (day.week===1?'<span class="pill pill-gold">Opening day</span>':'')+'</div>'+
-        '<div class="grid grid-2">'+games.map(function(g){
-          return DSUI.gameCard(g,{results:DS.RESULTS});
-        }).join('')+'</div></section>';
-    }).join('');
+      if(!games.length) return;
+      var past=games.filter(function(g){ return hasStarted(day,g); });
+      var future=games.filter(function(g){ return !hasStarted(day,g); });
+      if(future.length) upcoming.push({day:day, games:future});
+      if(past.length)   done.push({day:day, games:past});
+    });
+
+    var out='';
+    if(upcoming.length){
+      out += upcoming.map(function(u,i){
+        return dayBlock(u.day, u.games, { badge: i===0 ? '<span class="pill pill-gold">Next up</span>' : '' });
+      }).join('');
+    }
+
+    if(done.length){
+      // most recent first, and the games within a day newest first too
+      done.reverse();
+      out += '<section style="margin-top:8px">'+
+        '<div class="section-head" style="margin-bottom:20px;border-top:2px solid var(--text);padding-top:26px">'+
+          '<div class="eyebrow">Already played</div>'+
+          '<h2 class="h-md">Recently completed games</h2>'+
+        '</div>'+
+        done.map(function(u){
+          var g=u.games.slice().reverse();
+          return dayBlock(u.day, g, { idPrefix:'done-', badge:'<span class="pill pill-outline">Completed</span>' });
+        }).join('')+
+      '</section>';
+    }
+
     document.getElementById('schedule-out').innerHTML = out ||
       '<p class="center muted" style="padding:60px 0">No games match those filters.</p>';
   }
