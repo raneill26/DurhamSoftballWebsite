@@ -218,16 +218,22 @@ $$;
 create or replace function team_login(p_team_id text, p_passcode text)
 returns table (token uuid, team_id text, team_name text, expires_at timestamptz)
 language plpgsql security definer set search_path = public, extensions as $$
-declare v_hash text; v_name text;
+#variable_conflict use_column
+-- token, team_id and expires_at are all output variables AND real columns.
+declare v_hash text; v_name text; v_token uuid; v_exp timestamptz;
 begin
-  select passcode_hash, name into v_hash, v_name from teams where id = p_team_id;
+  select t.passcode_hash, t.name into v_hash, v_name from teams t where t.id = p_team_id;
   if v_hash is null or not (crypt(p_passcode, v_hash) = v_hash) then
     raise exception 'invalid passcode' using errcode = '28000';
   end if;
-  delete from team_sessions where expires_at < now();
-  return query
-    insert into team_sessions (team_id) values (p_team_id)
-    returning team_sessions.token, team_sessions.team_id, v_name, team_sessions.expires_at;
+  delete from team_sessions s where s.expires_at < now();
+  insert into team_sessions (team_id) values (p_team_id)
+    returning team_sessions.token, team_sessions.expires_at into v_token, v_exp;
+  token := v_token;
+  team_id := p_team_id;
+  team_name := v_name;
+  expires_at := v_exp;
+  return next;
 end; $$;
 
 create or replace function session_team(p_token uuid)
@@ -239,6 +245,7 @@ $$;
 create or replace function team_roster(p_token uuid, p_game_id integer)
 returns table (player_id uuid, full_name text, status text, waiver_signed boolean)
 language plpgsql security definer set search_path = public, extensions as $$
+#variable_conflict use_column
 declare v_team text;
 begin
   v_team := session_team(p_token);
@@ -346,15 +353,21 @@ $$;
 create or replace function admin_login(p_passcode text)
 returns table (token uuid, expires_at timestamptz)
 language plpgsql security definer set search_path = public, extensions as $$
-declare v_hash text;
+#variable_conflict use_column
+-- RETURNS TABLE names become plpgsql variables, so a bare column of the same
+-- name is ambiguous. Resolve clashes in favour of the column.
+declare v_hash text; v_token uuid; v_exp timestamptz;
 begin
-  select passcode_hash into v_hash from admin_settings where id;
+  select a.passcode_hash into v_hash from admin_settings a where a.id;
   if v_hash is null or not (crypt(p_passcode, v_hash) = v_hash) then
     raise exception 'invalid passcode' using errcode = '28000';
   end if;
-  delete from admin_sessions where expires_at < now();
-  return query insert into admin_sessions default values
-    returning admin_sessions.token, admin_sessions.expires_at;
+  delete from admin_sessions s where s.expires_at < now();
+  insert into admin_sessions default values
+    returning admin_sessions.token, admin_sessions.expires_at into v_token, v_exp;
+  token := v_token;
+  expires_at := v_exp;
+  return next;
 end; $$;
 
 create or replace function is_admin(p_token uuid)
@@ -713,6 +726,7 @@ end; $$;
 create or replace function admin_list_players(p_token uuid, p_season text)
 returns table (id uuid, full_name text, email text, team_id text, waiver_signed boolean)
 language plpgsql security definer set search_path = public, extensions as $$
+#variable_conflict use_column
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   return query
@@ -921,6 +935,7 @@ returns table (player_id uuid, full_name text, email text, phone text,
                preferred_team_id text, shirt_size text, waiver_signed boolean,
                paid boolean, team_id text)
 language plpgsql security definer set search_path = public, extensions as $$
+#variable_conflict use_column
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   return query
