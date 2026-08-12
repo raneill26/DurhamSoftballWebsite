@@ -115,7 +115,7 @@
     });
   });
   render();
-  DS.loadSchedule().then(function(ok){ if(ok) render(); });
+  DS.loadSchedule().then(function(ok){ if(ok && document.getElementById('standings-out')) render(); });
 })();
 </script>
 </body>

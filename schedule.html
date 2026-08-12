@@ -100,8 +100,10 @@
     '<p class="center muted" style="padding:60px 0">Loading the schedule…</p>';
 
   DS.loadSchedule().then(function(ok){
+    var out=document.getElementById('schedule-out');
+    if(!out) return;                       // page navigated away mid-request
     if(ok && DS.SCHEDULE.length){ fillWeekJump(); render(); return; }
-    document.getElementById('schedule-out').innerHTML =
+    out.innerHTML =
       '<div class="notice"><div><strong>No fixtures yet.</strong> The season schedule lives in the '+
       'database. Load it by running <code>supabase/seed_games.sql</code>, or build one from the '+
       'Schedule tab in the admin.</div></div>';

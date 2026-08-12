@@ -246,7 +246,7 @@
 
   // Fixtures live in the database. Redraw once they arrive.
   DS.loadSchedule().then(function(ok){
-    if(ok){ drawTeam(); mountAttendance(); }
+    if(ok && document.getElementById('team-page')){ drawTeam(); mountAttendance(); }
   });
 })();
 </script>
