@@ -569,7 +569,7 @@ create or replace function list_games(p_season text)
 returns table (id uuid, legacy_id integer, game_date date, game_time time,
                home_team text, away_team text, league text, venue text,
                home_score integer, away_score integer, status text)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select g.id, g.legacy_id, g.game_date, g.game_time, g.home_team, g.away_team,
          g.league, g.venue, g.home_score, g.away_score, g.status
   from games g where g.season_id = p_season
@@ -578,7 +578,7 @@ $$;
 
 create or replace function list_players(p_season text)
 returns table (id uuid, full_name text, email text, team_id text, waiver_signed boolean)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select p.id, p.full_name, p.email, p.team_id,
          exists (select 1 from waivers w where w.player_id = p.id and w.season_id = p.season_id)
   from players p where p.season_id = p_season order by p.team_id nulls first, p.full_name;
@@ -591,7 +591,7 @@ create or replace function admin_save_game(
   p_home text, p_away text, p_venue text default 'Pineywood Park',
   p_home_score integer default null, p_away_score integer default null,
   p_status text default 'scheduled')
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_id uuid; v_league text;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
@@ -618,7 +618,7 @@ begin
 end; $$;
 
 create or replace function admin_delete_game(p_token uuid, p_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   delete from games where id = p_id;
@@ -626,7 +626,7 @@ end; $$;
 
 create or replace function admin_set_score(
   p_token uuid, p_id uuid, p_home_score integer, p_away_score integer, p_status text default 'final')
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   update games set home_score=p_home_score, away_score=p_away_score, status=p_status where id=p_id;
@@ -637,7 +637,7 @@ end; $$;
 create or replace function admin_generate_schedule(
   p_token uuid, p_season text, p_first_date date, p_weeks integer,
   p_first_time time default '09:10', p_slot_minutes integer default 55)
-returns integer language plpgsql security definer set search_path = public as $$
+returns integer language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_made integer := 0;
   v_week integer;
@@ -685,7 +685,7 @@ end; $$;
 -- ---------------------------------------------------------------- roster admin
 create or replace function admin_save_player(
   p_token uuid, p_id uuid, p_season text, p_name text, p_email text, p_team text)
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_id uuid;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
@@ -704,7 +704,7 @@ begin
 end; $$;
 
 create or replace function admin_delete_player(p_token uuid, p_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   delete from players where id = p_id;
@@ -712,7 +712,7 @@ end; $$;
 
 create or replace function admin_list_players(p_token uuid, p_season text)
 returns table (id uuid, full_name text, email text, team_id text, waiver_signed boolean)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   return query
@@ -725,7 +725,7 @@ end; $$;
 -- ---------------------------------------------------------------- photo placement
 create or replace function admin_set_photo_placement(
   p_token uuid, p_id uuid, p_placement text, p_sort integer)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   update photos set placement = p_placement, sort_order = p_sort where id = p_id;
@@ -733,7 +733,7 @@ end; $$;
 
 create or replace function list_photos_by_placement(p_placement text)
 returns table (id uuid, url text, caption text, season_id text, sort_order integer, is_wide boolean)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select p.id, p.url, p.caption, p.season_id, p.sort_order, p.is_wide
   from photos p where p.placement = p_placement order by p.sort_order, p.created_at desc;
 $$;
@@ -777,7 +777,7 @@ alter table organizations add column if not exists created_at timestamptz defaul
 create or replace function list_organizations(p_season text default null)
 returns table (id text, name text, short_name text, cause text, blurb text,
                logo_url text, website text, legacy_url text, status text, league text)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select o.id, o.name, o.short_name, o.cause, o.blurb, o.logo_url, o.website,
          o.legacy_url, o.status,
          (select t.league from teams t
@@ -793,7 +793,7 @@ create or replace function admin_save_org(
   p_token uuid, p_id text, p_name text, p_short text, p_cause text, p_blurb text,
   p_logo text, p_website text, p_legacy text, p_status text,
   p_season text default null, p_league text default null)
-returns text language plpgsql security definer set search_path = public as $$
+returns text language plpgsql security definer set search_path = public, extensions as $$
 declare v_season text; v_id text;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
@@ -833,7 +833,7 @@ begin
 end; $$;
 
 create or replace function admin_delete_org(p_token uuid, p_id text)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   if exists (select 1 from games g join teams t on t.id in (g.home_team, g.away_team) where t.id = p_id) then
@@ -863,12 +863,12 @@ on conflict (key) do nothing;
 
 create or replace function get_settings()
 returns table (key text, value text)
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select s.key, s.value from site_settings s;
 $$;
 
 create or replace function admin_set_setting(p_token uuid, p_key text, p_value text)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   insert into site_settings (key, value) values (p_key, p_value)
@@ -884,7 +884,7 @@ create or replace function register_player(
   p_season text, p_full_name text, p_email text, p_phone text, p_team_id text,
   p_waiver_version text, p_signed_name text, p_agreed_hash text, p_user_agent text,
   p_signature_image text default null, p_shirt_size text default null)
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_player uuid;
 begin
   if coalesce((select value from site_settings where key='registration_open'),'false') <> 'true' then
@@ -920,7 +920,7 @@ create or replace function admin_registrations(p_token uuid, p_season text)
 returns table (player_id uuid, full_name text, email text, phone text,
                preferred_team_id text, shirt_size text, waiver_signed boolean,
                paid boolean, team_id text)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   return query
@@ -934,14 +934,14 @@ begin
 end; $$;
 
 create or replace function admin_assign_team(p_token uuid, p_player uuid, p_team text)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   update players set team_id = nullif(p_team,'') where id = p_player;
 end; $$;
 
 create or replace function admin_set_paid(p_token uuid, p_player uuid, p_season text, p_paid boolean)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
   insert into registrations (player_id, season_id, status)
@@ -953,7 +953,7 @@ end; $$;
 -- Wipe the player base between seasons. Waivers, registrations and attendance
 -- cascade from players, so this clears the lot for that season.
 create or replace function admin_clear_players(p_token uuid, p_season text, p_confirm text)
-returns integer language plpgsql security definer set search_path = public as $$
+returns integer language plpgsql security definer set search_path = public, extensions as $$
 declare n integer;
 begin
   if not is_admin(p_token) then raise exception 'not signed in' using errcode='28000'; end if;
