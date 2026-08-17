@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=t513230">
+<link rel="stylesheet" href="assets/css/site.css?v=t976284">
 </head>
 <body>
 <div data-header=""></div>
@@ -26,10 +26,10 @@
 </main>
 
 <div data-footer></div>
-<script src="assets/js/config.js?v=t513230"></script>
-<script src="assets/js/data.js?v=t513230"></script>
-<script src="assets/js/api.js?v=t513230"></script>
-<script src="assets/js/site.js?v=t513230"></script>
+<script src="assets/js/config.js?v=t976284"></script>
+<script src="assets/js/data.js?v=t976284"></script>
+<script src="assets/js/api.js?v=t976284"></script>
+<script src="assets/js/site.js?v=t976284"></script>
 <script>
 (function(){
   var root=document.getElementById('admin-root');
@@ -584,6 +584,24 @@
     }).catch(function(e){ setHTML('org-list', msg('err',DSUI.esc(e.message))); });
   }
 
+  /* Group a flat game list into weeks by distinct date, newest week last. */
+  function weeksFrom(rows){
+    var dates=[]; rows.forEach(function(r){ if(dates.indexOf(r.game_date)===-1) dates.push(r.game_date); });
+    dates.sort();
+    var byDate={}; dates.forEach(function(d,i){ byDate[d]=i+1; });
+    return { dates:dates, weekOf:function(d){ return byDate[d]; } };
+  }
+
+  function weekPicker(id, wk, current, counts){
+    return '<select class="field" id="'+id+'">'+
+      '<option value="all"'+(current==='all'?' selected':'')+'>All weeks</option>'+
+      wk.dates.map(function(d,i){
+        var n=i+1, label=new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        return '<option value="'+d+'"'+(current===d?' selected':'')+'>Week '+n+' &middot; '+label+
+               ' ('+(counts[d]||0)+')</option>';
+      }).join('')+'</select>';
+  }
+
   /* ---------------- schedule ---------------- */
   function teamOptions(sel){
     return DS.TEAMS.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
@@ -648,17 +666,40 @@
       '<button class="btn btn-outline btn-sm" data-del style="color:var(--loss)">Delete</button></div>';
   }
 
+  var gWeek='all';
+
   function loadGames(){
     var host=document.getElementById('glist'); if(!host) return;
     DSAPI.listGames().then(function(rows){
-      host.innerHTML=rows.length?rows.map(gameRow).join(''):'<p class="muted">No games yet.</p>';
+      if(!rows.length){ setHTML('glist','<p class="muted">No games yet.</p>'); return; }
+      var wk=weeksFrom(rows), counts={};
+      rows.forEach(function(r){ counts[r.game_date]=(counts[r.game_date]||0)+1; });
+      if(gWeek!=='all' && !counts[gWeek]) gWeek='all';
+      var shown = gWeek==='all' ? rows : rows.filter(function(r){ return r.game_date===gWeek; });
+
+      host.innerHTML =
+        '<div class="toolbar" style="margin-bottom:12px">'+weekPicker('gweek-sel',wk,gWeek,counts)+
+          '<span class="spacer"></span><span class="muted" style="font-size:.85rem">'+
+          shown.length+' of '+rows.length+' games</span></div>'+
+        (gWeek==='all'
+          ? wk.dates.map(function(dt){
+              var g=rows.filter(function(r){ return r.game_date===dt; });
+              return '<h3 class="h-sm" style="margin:20px 0 10px">Week '+wk.weekOf(dt)+' &middot; '+
+                     DSUI.fmtDate(dt,{weekday:'long',month:'long',day:'numeric'})+'</h3>'+
+                     g.map(gameRow).join('');
+            }).join('')
+          : shown.map(gameRow).join(''));
+
+      var sel=document.getElementById('gweek-sel');
+      if(sel) sel.addEventListener('change',function(){ gWeek=this.value; loadGames(); });
+
       host.querySelectorAll('[data-del]').forEach(function(b){
         b.addEventListener('click',function(){
           var id=b.closest('.admin-item').getAttribute('data-id');
           if(confirm('Delete this game?')) DSAPI.deleteGame(id).then(loadGames);
         });
       });
-    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
+    }).catch(function(e){ setHTML('glist', msg('err',DSUI.esc(e.message))); });
   }
 
   /* ---------------- results ---------------- */
@@ -680,23 +721,54 @@
     }).catch(function(e){ setHTML('rlist', msg('err',DSUI.esc(e.message))); });
   }
 
+  var rWeek='all';
+
+  function resultRow(g){
+    var h=DS.byId[g.home_team], a=DS.byId[g.away_team];
+    var scored = g.home_score!=null && g.away_score!=null;
+    return '<div class="admin-item'+(scored?' assigned':'')+'" data-id="'+g.id+'"><div></div>'+
+      '<div class="meta"><b>'+DSUI.esc(a?a.short:g.away_team)+' at '+DSUI.esc(h?h.short:g.home_team)+'</b>'+
+      '<span>'+g.game_date+' &middot; '+g.game_time.slice(0,5)+(scored?' &middot; final':'')+'</span></div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<input type="number" data-as value="'+(g.away_score!=null?g.away_score:'')+'" placeholder="A" '+
+          'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
+        '<input type="number" data-hs value="'+(g.home_score!=null?g.home_score:'')+'" placeholder="H" '+
+          'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
+        '<button class="btn btn-outline btn-sm" data-save>Save</button>'+
+      '</div></div>';
+  }
+
   function loadResults(season){
     var host=document.getElementById('rlist'); if(!host) return;
     DSAPI.listGames(season).then(function(rows){
-      if(!rows.length){ host.innerHTML='<p class="muted">No games in that season yet.</p>'; return; }
-      host.innerHTML=rows.map(function(g){
-        var h=DS.byId[g.home_team], a=DS.byId[g.away_team];
-        return '<div class="admin-item" data-id="'+g.id+'"><div></div>'+
-          '<div class="meta"><b>'+DSUI.esc(a?a.short:g.away_team)+' at '+DSUI.esc(h?h.short:g.home_team)+'</b>'+
-          '<span>'+g.game_date+' · '+g.game_time.slice(0,5)+'</span></div>'+
-          '<div style="display:flex;gap:6px;align-items:center">'+
-            '<input type="number" data-as value="'+(g.away_score!=null?g.away_score:'')+'" placeholder="A" '+
-              'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
-            '<input type="number" data-hs value="'+(g.home_score!=null?g.home_score:'')+'" placeholder="H" '+
-              'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
-            '<button class="btn btn-outline btn-sm" data-save>Save</button>'+
-          '</div></div>';
-      }).join('');
+      if(!rows.length){ setHTML('rlist','<p class="muted">No games in that season yet.</p>'); return; }
+      var wk=weeksFrom(rows), counts={}, done={};
+      rows.forEach(function(r){
+        counts[r.game_date]=(counts[r.game_date]||0)+1;
+        if(r.home_score!=null) done[r.game_date]=(done[r.game_date]||0)+1;
+      });
+      if(rWeek!=='all' && !counts[rWeek]) rWeek='all';
+      var shown = rWeek==='all' ? rows : rows.filter(function(r){ return r.game_date===rWeek; });
+      var scored = shown.filter(function(r){ return r.home_score!=null; }).length;
+
+      host.innerHTML =
+        '<div class="toolbar" style="margin-bottom:12px">'+weekPicker('rweek-sel',wk,rWeek,counts)+
+          '<span class="spacer"></span><span class="muted" style="font-size:.85rem">'+
+          scored+' of '+shown.length+' scored</span></div>'+
+        (rWeek==='all'
+          ? wk.dates.map(function(dt){
+              var g=rows.filter(function(r){ return r.game_date===dt; });
+              return '<h3 class="h-sm" style="margin:20px 0 10px">Week '+wk.weekOf(dt)+' &middot; '+
+                     DSUI.fmtDate(dt,{month:'long',day:'numeric'})+
+                     ' <span class="muted" style="font-size:.8rem;text-transform:none">('+
+                     (done[dt]||0)+'/'+g.length+' scored)</span></h3>'+
+                     g.map(resultRow).join('');
+            }).join('')
+          : shown.map(resultRow).join(''));
+
+      var sel=document.getElementById('rweek-sel');
+      if(sel) sel.addEventListener('change',function(){ rWeek=this.value; loadResults(season); });
+
       host.querySelectorAll('[data-save]').forEach(function(b){
         b.addEventListener('click',function(){
           var row=b.closest('.admin-item');
@@ -705,11 +777,11 @@
           if(isNaN(hs)||isNaN(as_)) return alert('Enter both scores.');
           b.textContent='Saving…';
           DSAPI.setScore(row.getAttribute('data-id'),hs,as_,'final')
-            .then(function(){ b.textContent='Saved'; })
+            .then(function(){ b.textContent='Saved'; row.classList.add('assigned'); })
             .catch(function(e){ b.textContent='Save'; alert(e.message); });
         });
       });
-    }).catch(function(e){ host.innerHTML=msg('err',DSUI.esc(e.message)); });
+    }).catch(function(e){ setHTML('rlist', msg('err',DSUI.esc(e.message))); });
   }
 
   /* ---------------- rosters ---------------- */
