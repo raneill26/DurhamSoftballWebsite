@@ -600,3 +600,9 @@ a.gc-team-name:hover{color:var(--clay)}
 .att-move button:hover:not(:disabled){border-color:var(--text);color:var(--text)}
 .att-move button:disabled{opacity:.3}
 .att-order-msg{font-size:.8rem;color:var(--text-mute);padding:10px 16px;border-top:1px solid var(--line)}
+
+/* Rainout: a washed-out game is stored 0-0 but must not count as a tie */
+.pill-rainout{background:#E8F1FB;color:#1B4F82;border:1px solid #C4DBF2}
+.rain-row{display:flex;align-items:center;gap:8px;margin-top:8px;
+  font-size:.82rem;color:var(--text-soft);cursor:pointer;line-height:1.4}
+.rain-row input{width:16px;height:16px;flex-shrink:0;accent-color:var(--clay);margin:0}

@@ -168,7 +168,9 @@
       '<div class="gc-meta">'+
         '<span class="gc-time">'+esc(game.time)+'</span>'+
         '<span class="pill pill-league">'+game.league+' League</span>'+
-        (res?'<span class="pill pill-final">Final</span>':'')+
+        (game.status==='rainout'
+          ? '<span class="pill pill-rainout">Rainout</span>'
+          : (res?'<span class="pill pill-final">Final</span>':''))+
         '<span class="spacer"></span>'+
         '<span class="gc-venue">'+ICONS.pin+esc(game.venue)+'</span>'+
       '</div>'+

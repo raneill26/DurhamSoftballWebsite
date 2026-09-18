@@ -228,7 +228,9 @@
         var g={ id:r.id, gameId:r.legacy_id, time:h12+':'+m+' '+ap, time24:r.game_time,
                 date:r.game_date, home:r.home_team, away:r.away_team,
                 league:r.league, venue:r.venue||SEASON.venue, status:r.status };
-        if(r.home_score!=null && r.away_score!=null){
+        // A rainout is 0-0 in the database but must never count as a tie,
+        // so it is deliberately left out of the results used for standings.
+        if(r.home_score!=null && r.away_score!=null && r.status!=='rainout'){
           RESULTS[g.id]={ home:r.home_score, away:r.away_score };
         }
         byDate[r.game_date].push(g);

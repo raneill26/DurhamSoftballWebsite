@@ -726,9 +726,19 @@
   function resultRow(g){
     var h=DS.byId[g.home_team], a=DS.byId[g.away_team];
     var scored = g.home_score!=null && g.away_score!=null;
-    return '<div class="admin-item'+(scored?' assigned':'')+'" data-id="'+g.id+'"><div></div>'+
+    var rain   = g.status==='rainout';
+    // 0-0 is ambiguous: it could be a real scoreless tie or a washed-out game.
+    // The checkbox only appears for 0-0 so it never clutters a normal score.
+    var zeros  = scored && g.home_score===0 && g.away_score===0;
+    var label  = rain ? ' &middot; rainout' : (scored ? ' &middot; final' : '');
+    return '<div class="admin-item'+(scored||rain?' assigned':'')+'" data-id="'+g.id+'"><div></div>'+
       '<div class="meta"><b>'+DSUI.esc(a?a.short:g.away_team)+' at '+DSUI.esc(h?h.short:g.home_team)+'</b>'+
-      '<span>'+g.game_date+' &middot; '+g.game_time.slice(0,5)+(scored?' &middot; final':'')+'</span></div>'+
+      '<span>'+g.game_date+' &middot; '+g.game_time.slice(0,5)+label+'</span>'+
+        '<label class="rain-row'+((zeros||rain)?'':' hide')+'" data-rain-wrap>'+
+          '<input type="checkbox" data-rain'+(rain?' checked':'')+'>'+
+          '<span>Rainout? Keeps 0-0 off both records instead of counting a tie.</span>'+
+        '</label>'+
+      '</div>'+
       '<div style="display:flex;gap:6px;align-items:center">'+
         '<input type="number" data-as value="'+(g.away_score!=null?g.away_score:'')+'" placeholder="A" '+
           'style="width:58px;border:1px solid var(--line);border-radius:4px;padding:7px;font-size:.9rem">'+
@@ -738,6 +748,30 @@
       '</div></div>';
   }
 
+  /* Show the rainout checkbox only while a row reads 0-0. */
+  function wireRainToggle(row){
+    var wrap=row.querySelector('[data-rain-wrap]');
+    var cb=row.querySelector('[data-rain]');
+    if(!wrap||!cb) return;
+    function sync(){
+      var hs=parseInt(row.querySelector('[data-hs]').value,10);
+      var as_=parseInt(row.querySelector('[data-as]').value,10);
+      var zeros = hs===0 && as_===0;
+      wrap.classList.toggle('hide', !(zeros || cb.checked));
+      if(!zeros && cb.checked) cb.checked=false;   // a rainout is always 0-0
+    }
+    row.querySelectorAll('[data-hs],[data-as]').forEach(function(i){
+      i.addEventListener('input', sync);
+    });
+    cb.addEventListener('change', function(){
+      if(cb.checked){
+        row.querySelector('[data-hs]').value=0;
+        row.querySelector('[data-as]').value=0;
+      }
+      sync();
+    });
+  }
+
   function loadResults(season){
     var host=document.getElementById('rlist'); if(!host) return;
     DSAPI.listGames(season).then(function(rows){
@@ -745,11 +779,14 @@
       var wk=weeksFrom(rows), counts={}, done={};
       rows.forEach(function(r){
         counts[r.game_date]=(counts[r.game_date]||0)+1;
-        if(r.home_score!=null) done[r.game_date]=(done[r.game_date]||0)+1;
+        // rainouts count as logged: nothing more to enter for them
+        if(r.home_score!=null || r.status==='rainout') done[r.game_date]=(done[r.game_date]||0)+1;
       });
       if(rWeek!=='all' && !counts[rWeek]) rWeek='all';
       var shown = rWeek==='all' ? rows : rows.filter(function(r){ return r.game_date===rWeek; });
-      var scored = shown.filter(function(r){ return r.home_score!=null; }).length;
+      var scored = shown.filter(function(r){
+        return r.home_score!=null || r.status==='rainout';
+      }).length;
 
       host.innerHTML =
         '<div class="toolbar" style="margin-bottom:12px">'+weekPicker('rweek-sel',wk,rWeek,counts)+
@@ -769,15 +806,28 @@
       var sel=document.getElementById('rweek-sel');
       if(sel) sel.addEventListener('change',function(){ rWeek=this.value; loadResults(season); });
 
+      host.querySelectorAll('.admin-item').forEach(wireRainToggle);
+
       host.querySelectorAll('[data-save]').forEach(function(b){
         b.addEventListener('click',function(){
           var row=b.closest('.admin-item');
           var hs=parseInt(row.querySelector('[data-hs]').value,10);
           var as_=parseInt(row.querySelector('[data-as]').value,10);
           if(isNaN(hs)||isNaN(as_)) return alert('Enter both scores.');
+          var cb=row.querySelector('[data-rain]');
+          var rain=!!(cb && cb.checked);
+          if(rain && (hs!==0 || as_!==0)) return alert('A rainout has to be 0-0.');
           b.textContent='Saving…';
-          DSAPI.setScore(row.getAttribute('data-id'),hs,as_,'final')
-            .then(function(){ b.textContent='Saved'; row.classList.add('assigned'); })
+          DSAPI.setScore(row.getAttribute('data-id'),hs,as_, rain?'rainout':'final')
+            .then(function(){
+              b.textContent='Saved';
+              row.classList.add('assigned');
+              var meta=row.querySelector('.meta span');
+              if(meta){
+                meta.textContent = meta.textContent.replace(/ · (final|rainout)$/,'') +
+                                   (rain ? ' · rainout' : ' · final');
+              }
+            })
             .catch(function(e){ b.textContent='Save'; alert(e.message); });
         });
       });
